@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 import { FiUsers, FiCalendar, FiFileText, FiTrendingUp } from 'react-icons/fi';
+import patientService from '../services/patient.service';
+import sessionService from '../services/session.service';
+import noteService from '../services/note.service';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -15,29 +17,29 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [patientsRes, sessionsRes, notesRes] = await Promise.all([
-          axios.get('/api/patients'),
-          axios.get('/api/sessions'),
-          axios.get('/api/notes')
+        const [patients, sessions, notes] = await Promise.all([
+          patientService.getPatients(),
+          sessionService.getSessions(),
+          noteService.getNotes()
         ]);
 
         setStats({
-          totalPatients: patientsRes.data.length,
-          todaySessions: sessionsRes.data.filter(s => {
+          totalPatients: patients.length,
+          todaySessions: sessions.filter(s => {
             const today = new Date().toDateString();
             return new Date(s.date).toDateString() === today;
           }).length,
-          recentNotes: notesRes.data.slice(0, 5).length
+          recentNotes: notes.slice(0, 5).length
         });
 
         // Combine recent activity
         const activity = [
-          ...sessionsRes.data.slice(0, 3).map(s => ({
+          ...sessions.slice(0, 3).map(s => ({
             type: 'session',
             data: s,
             date: s.date
           })),
-          ...notesRes.data.slice(0, 3).map(n => ({
+          ...notes.slice(0, 3).map(n => ({
             type: 'note',
             data: n,
             date: n.createdAt

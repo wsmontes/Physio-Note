@@ -13,12 +13,24 @@ Physio-Note streamlines documentation for physiotherapy sessions, helping practi
 - **Tailwind CSS** - Utility-first CSS framework
 - **React Router** - Navigation and routing
 - **Axios** - API communication
+- **React Hook Form** - Form management
+- **date-fns** - Date formatting
 
 ### Backend
 - **Node.js** with **Express** - RESTful API server
 - **MongoDB Atlas** - Cloud database solution
 - **Mongoose** - MongoDB object modeling
 - **JWT** - Authentication and authorization
+- **OpenAI API** - AI-powered features
+  - **Whisper** - Audio transcription
+  - **GPT-5-nano** - Clinical note generation (most cost-efficient model)
+- **Multer** - File upload handling
+
+### AI Features
+- **Voice-to-Text Transcription** - Real-time session transcription using Whisper
+- **Smart SOAP Note Generation** - Auto-generate structured clinical notes with GPT-5-nano
+- **Exercise Prescription Generator** - AI-powered home exercise program creation
+- **Billing Code Suggestions** - Automated CPT code recommendations
 
 ## 📁 Project Structure
 
@@ -88,6 +100,11 @@ Physio-Note/
    MONGODB_URI=your_mongodb_atlas_connection_string
    JWT_SECRET=your_jwt_secret_key
    NODE_ENV=development
+   
+   # OpenAI API Configuration
+   OPENAI_API_KEY=your_openai_api_key
+   OPENAI_MODEL=gpt-5-nano
+   OPENAI_WHISPER_MODEL=whisper-1
    ```
 
    **client/.env**
@@ -101,15 +118,48 @@ Physio-Note/
    # From root directory - run both client and server
    npm run dev
 
-   # Or run separately:
-   # Terminal 1 - Backend
-   cd server && npm run dev
+   # Or run separatelImplemented)
 
-   # Terminal 2 - Frontend
-   cd client && npm run dev
-   ```
+- 🎤 **Voice-to-Text Transcription** - Record or upload audio sessions, auto-transcribe with Whisper
+- 📝 **AI-Powered SOAP Notes** - Generate structured clinical documentation with GPT-5-nano
+- 👤 **Patient Management** - Comprehensive patient records with medical history
+- 📊 **Session Tracking** - Track physiotherapy sessions with detailed assessments
+- 💪 **Exercise Prescription** - AI-generated home exercise programs
+- 📈 **Progress Tracking** - Range of motion, strength tests, functional assessments
+- 💰 **Billing Code Suggestions** - Automated CPT code recommendations
+- 🔒 **HIPAA-Focused Security** - Secure, encrypted data storage
+- 📱 **Responsive Design** - Works on desktop, tablet, and mobile
 
-5. **Access the application**
+## 🎯 Physiotherapy-Specific Features
+
+### Clinical Assessments
+- Range of Motion (ROM) measurements
+- Manual Muscle Testing (0-5 scale)
+- Functional testing and scoring
+- Postural assessment
+- Gait analysis
+- Pain scale tracking (0-10)
+
+### Treatment Documentation
+- SOAP note structure (Subjective, Objective, Assessment, Plan)
+- Treatment interventions with sets/reps/duration
+- Modalities used (ultrasound, TENS, heat/ice, etc.)
+- Patient response tracking
+- Goals progress monitoring
+
+### Exercise Management
+- Exercise prescriptions with detailed instructions
+- Home exercise programs
+- Exercise types: strengthening, stretching, balance, aerobic, functional
+- Progression tracking
+
+### Templates
+- Initial evaluation templates
+- Progress note templates
+- Discharge summary templates
+- Re-evaluation templates
+- Exercise prescription templates
+- Multiple specialty templates (orthopedic, sports, neuro, etc.)
    - Frontend: `http://localhost:5173`
    - Backend API: `http://localhost:5000`
 

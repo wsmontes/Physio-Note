@@ -3,6 +3,7 @@ const router = express.Router();
 const { protect } = require('../middleware/auth.middleware');
 const Session = require('../models/session.model');
 const Patient = require('../models/patient.model');
+const Note = require('../models/note.model');
 
 // @route   GET /api/sessions
 // @desc    Get all sessions for logged-in therapist
@@ -90,6 +91,9 @@ router.post('/', protect, async (req, res) => {
 // @access  Private
 router.put('/:id', protect, async (req, res) => {
   try {
+    console.log('Updating session:', req.params.id);
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     const session = await Session.findOneAndUpdate(
       { _id: req.params.id, therapistId: req.user._id },
       req.body,
@@ -100,10 +104,40 @@ router.put('/:id', protect, async (req, res) => {
       return res.status(404).json({ error: { message: 'Session not found' } });
     }
 
+    // Auto-create or update note if SOAP data exists
+    if (session.subjective || session.objective || session.assessment || session.plan) {
+      try {
+        const noteData = {
+          patient: session.patientId._id || session.patientId, // Handle populated or ID-only
+          session: session._id,
+          therapist: req.user._id,
+          type: 'soap',
+          title: `Session Note - ${new Date(session.date).toLocaleDateString()}`,
+          subjective: session.subjective,
+          objective: session.objective,
+          assessment: session.assessment,
+          plan: session.plan
+        };
+
+        // Check if note already exists for this session
+        const existingNote = await Note.findOne({ session: session._id });
+        
+        if (existingNote) {
+          await Note.findByIdAndUpdate(existingNote._id, noteData);
+        } else {
+          await Note.create(noteData);
+        }
+      } catch (noteError) {
+        console.error('Error creating/updating note:', noteError);
+        // Don't fail the session update if note creation fails
+      }
+    }
+
     res.json(session);
   } catch (error) {
     console.error('Error updating session:', error);
-    res.status(500).json({ error: { message: 'Error updating session' } });
+    console.error('Error details:', error.message, error.stack);
+    res.status(500).json({ error: { message: 'Error updating session', details: error.message } });
   }
 });
 
