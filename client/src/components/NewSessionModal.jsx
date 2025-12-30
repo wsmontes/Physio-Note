@@ -99,7 +99,7 @@ const NewSessionModal = ({ isOpen, onClose, preselectedPatientId = null, onSessi
                   <option value="">Select a patient</option>
                   {patients.map((patient) => (
                     <option key={patient._id} value={patient._id}>
-                      {patient.name}
+                      {patient.firstName} {patient.lastName}
                     </option>
                   ))}
                 </select>

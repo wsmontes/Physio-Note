@@ -51,9 +51,13 @@ const Notes = () => {
     setExpandedNotes(newExpanded);
   };
 
-  const getPatientName = (patientId) => {
-    const patient = patients.find(p => p._id === patientId);
-    return patient ? patient.name : 'Unknown Patient';
+  const getPatientName = (patientIdOrObject) => {
+    // Handle both populated object and ID string
+    if (typeof patientIdOrObject === 'object' && patientIdOrObject !== null) {
+      return `${patientIdOrObject.firstName} ${patientIdOrObject.lastName}`;
+    }
+    const patient = patients.find(p => p._id === patientIdOrObject);
+    return patient ? `${patient.firstName} ${patient.lastName}` : 'Unknown Patient';
   };
 
   const getNoteTypeColor = (type) => {
@@ -72,13 +76,14 @@ const Notes = () => {
     const matchesSearch = 
       note.content?.toLowerCase().includes(searchLower) ||
       note.title?.toLowerCase().includes(searchLower) ||
-      getPatientName(note.patient).toLowerCase().includes(searchLower);
+      getPatientName(note.patientId).toLowerCase().includes(searchLower);
 
     // Type filter
     const matchesType = filterType === 'all' || note.type === filterType;
 
     // Patient filter
-    const matchesPatient = filterPatient === 'all' || note.patient === filterPatient;
+    const matchesPatient = filterPatient === 'all' || 
+      (typeof note.patientId === 'object' ? note.patientId._id : note.patientId) === filterPatient;
 
     return matchesSearch && matchesType && matchesPatient;
   });
@@ -143,7 +148,7 @@ const Notes = () => {
               <option value="all">All Patients</option>
               {patients.map(patient => (
                 <option key={patient._id} value={patient._id}>
-                  {patient.name}
+                  {patient.firstName} {patient.lastName}
                 </option>
               ))}
             </select>
@@ -192,7 +197,7 @@ const Notes = () => {
                     <div className="flex items-center gap-4 text-sm text-gray-600">
                       <span className="flex items-center gap-1">
                         <FiUser className="w-4 h-4" />
-                        {getPatientName(note.patient)}
+                        {getPatientName(note.patientId)}
                       </span>
                       {note.session && (
                         <Link
@@ -219,35 +224,61 @@ const Notes = () => {
                 {/* Note Content (Expanded) */}
                 {isExpanded && (
                   <div className="mt-4 pt-4 border-t border-gray-200">
-                    {/* SOAP Sections */}
-                    {note.type === 'soap' && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {note.subjective && (
-                          <div className="p-4 bg-blue-50 rounded-lg">
-                            <h4 className="font-semibold text-blue-900 mb-2">Subjective</h4>
-                            <p className="text-sm text-gray-700 whitespace-pre-wrap">{note.subjective}</p>
-                          </div>
-                        )}
-                        {note.objective && (
-                          <div className="p-4 bg-green-50 rounded-lg">
-                            <h4 className="font-semibold text-green-900 mb-2">Objective</h4>
-                            <p className="text-sm text-gray-700 whitespace-pre-wrap">{note.objective}</p>
-                          </div>
-                        )}
-                        {note.assessment && (
-                          <div className="p-4 bg-yellow-50 rounded-lg">
-                            <h4 className="font-semibold text-yellow-900 mb-2">Assessment</h4>
-                            <p className="text-sm text-gray-700 whitespace-pre-wrap">{note.assessment}</p>
-                          </div>
-                        )}
-                        {note.plan && (
-                          <div className="p-4 bg-purple-50 rounded-lg">
-                            <h4 className="font-semibold text-purple-900 mb-2">Plan</h4>
-                            <p className="text-sm text-gray-700 whitespace-pre-wrap">{note.plan}</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    {/* SOAP Sections - Parse from content */}
+                    {note.type === 'soap' && note.content && (() => {
+                      // Parse SOAP sections from content string
+                      const parseSOAP = (content) => {
+                        const sections = {
+                          subjective: '',
+                          objective: '',
+                          assessment: '',
+                          plan: ''
+                        };
+                        
+                        const subjectiveMatch = content.match(/SUBJECTIVE:\s*([\s\S]*?)(?=\n\nOBJECTIVE:|$)/i);
+                        const objectiveMatch = content.match(/OBJECTIVE:\s*([\s\S]*?)(?=\n\nASSESSMENT:|$)/i);
+                        const assessmentMatch = content.match(/ASSESSMENT:\s*([\s\S]*?)(?=\n\nPLAN:|$)/i);
+                        const planMatch = content.match(/PLAN:\s*([\s\S]*?)$/i);
+                        
+                        if (subjectiveMatch) sections.subjective = subjectiveMatch[1].trim();
+                        if (objectiveMatch) sections.objective = objectiveMatch[1].trim();
+                        if (assessmentMatch) sections.assessment = assessmentMatch[1].trim();
+                        if (planMatch) sections.plan = planMatch[1].trim();
+                        
+                        return sections;
+                      };
+                      
+                      const soap = parseSOAP(note.content);
+                      
+                      return (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {soap.subjective && (
+                            <div className="p-4 bg-blue-50 rounded-lg">
+                              <h4 className="font-semibold text-blue-900 mb-2">Subjective</h4>
+                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{soap.subjective}</p>
+                            </div>
+                          )}
+                          {soap.objective && (
+                            <div className="p-4 bg-green-50 rounded-lg">
+                              <h4 className="font-semibold text-green-900 mb-2">Objective</h4>
+                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{soap.objective}</p>
+                            </div>
+                          )}
+                          {soap.assessment && (
+                            <div className="p-4 bg-yellow-50 rounded-lg">
+                              <h4 className="font-semibold text-yellow-900 mb-2">Assessment</h4>
+                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{soap.assessment}</p>
+                            </div>
+                          )}
+                          {soap.plan && (
+                            <div className="p-4 bg-purple-50 rounded-lg">
+                              <h4 className="font-semibold text-purple-900 mb-2">Plan</h4>
+                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{soap.plan}</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* General Content */}
                     {note.content && note.type !== 'soap' && (

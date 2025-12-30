@@ -69,22 +69,35 @@ const generateSOAPNote = async (transcription, context = {}, template = 'soap') 
 
     console.log('Generating SOAP note with prompt:', userPrompt.substring(0, 200));
 
-    const completion = await openai.chat.completions.create({
+    // Use Responses API for GPT-5 models
+    const response = await openai.responses.create({
       model: process.env.OPENAI_MODEL || 'gpt-5-nano',
-      messages: [
-        { role: 'system', content: systemPrompt },
+      input: [
+        { role: 'developer', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      max_completion_tokens: 2000
+      text: {
+        verbosity: 'medium'
+      }
     });
 
-    const noteContent = completion.choices[0].message.content;
+    // Extract text from response.output
+    let noteContent = '';
+    for (const item of response.output) {
+      if (item.content) {
+        for (const content of item.content) {
+          if (content.text) {
+            noteContent += content.text;
+          }
+        }
+      }
+    }
 
     logDebug('=====================================', '');
     logDebug('OPENAI RAW RESPONSE:', noteContent);
     logDebug('Response Length:', noteContent?.length);
     logDebug('Response Type:', typeof noteContent);
-    logDebug('Full Completion Object:', completion);
+    logDebug('Full Response Object:', response);
     logDebug('=====================================', '');
     
     const parsedNote = parseNoteContent(noteContent, template);
@@ -121,13 +134,16 @@ Generate a home exercise program with:
 
 Format as JSON array of exercises.`;
 
+    // gpt-5-nano is a reasoning model - combine system and user prompts
+    const combinedPrompt = `You are an expert physiotherapist creating evidence-based home exercise programs.\n\n${prompt}`;
+    
     const completion = await openai.chat.completions.create({
       model: process.env.OPENAI_MODEL || 'gpt-5-nano',
       messages: [
-        { role: 'system', content: 'You are an expert physiotherapist creating evidence-based home exercise programs.' },
-        { role: 'user', content: prompt }
+        { role: 'user', content: combinedPrompt }
       ],
-      max_completion_tokens: 1500
+      max_tokens: 1500,
+      temperature: 0.7
     });
 
     return JSON.parse(completion.choices[0].message.content);
@@ -151,13 +167,16 @@ Modalities: ${JSON.stringify(sessionData.modalitiesUsed || [])}
 
 Provide billing codes in JSON format with: code, description, and recommended units.`;
 
+    // gpt-5-nano is a reasoning model - combine system and user prompts
+    const combinedPrompt = `You are a medical billing expert specializing in physiotherapy CPT codes.\n\n${prompt}`;
+    
     const completion = await openai.chat.completions.create({
       model: process.env.OPENAI_MODEL || 'gpt-5-nano',
       messages: [
-        { role: 'system', content: 'You are a medical billing expert specializing in physiotherapy CPT codes.' },
-        { role: 'user', content: prompt }
+        { role: 'user', content: combinedPrompt }
       ],
-      max_completion_tokens: 800
+      max_tokens: 800,
+      temperature: 0.5
     });
 
     return JSON.parse(completion.choices[0].message.content);

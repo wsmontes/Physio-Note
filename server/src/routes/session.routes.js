@@ -52,7 +52,17 @@ router.get('/:id', protect, async (req, res) => {
       return res.status(404).json({ error: { message: 'Session not found' } });
     }
 
-    res.json(session);
+    // Transform nested assessment to flat structure for client
+    const sessionData = session.toObject();
+    if (sessionData.assessment && typeof sessionData.assessment === 'object' && !Array.isArray(sessionData.assessment)) {
+      sessionData.subjective = sessionData.assessment.subjective || '';
+      sessionData.objective = sessionData.assessment.objective || '';
+      const assessmentValue = sessionData.assessment.assessment || '';
+      sessionData.plan = sessionData.assessment.plan || '';
+      sessionData.assessment = assessmentValue;
+    }
+
+    res.json(sessionData);
   } catch (error) {
     console.error('Error fetching session:', error);
     res.status(500).json({ error: { message: 'Error fetching session' } });
@@ -94,9 +104,25 @@ router.put('/:id', protect, async (req, res) => {
     console.log('Updating session:', req.params.id);
     console.log('Request body:', JSON.stringify(req.body, null, 2));
     
+    // Transform SOAP fields if they exist as top-level properties
+    const updateData = { ...req.body };
+    if (req.body.subjective || req.body.objective || req.body.assessment || req.body.plan) {
+      updateData.assessment = {
+        subjective: req.body.subjective,
+        objective: req.body.objective,
+        assessment: req.body.assessment,
+        plan: req.body.plan
+      };
+      // Remove the top-level SOAP fields
+      delete updateData.subjective;
+      delete updateData.objective;
+      delete updateData.plan;
+      // Keep req.body.assessment but it will be overwritten by the nested object
+    }
+    
     const session = await Session.findOneAndUpdate(
       { _id: req.params.id, therapistId: req.user._id },
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     ).populate('patientId', 'firstName lastName');
 
@@ -105,22 +131,22 @@ router.put('/:id', protect, async (req, res) => {
     }
 
     // Auto-create or update note if SOAP data exists
-    if (session.subjective || session.objective || session.assessment || session.plan) {
+    if (session.assessment?.subjective || session.assessment?.objective || session.assessment?.assessment || session.assessment?.plan) {
       try {
+        // Combine SOAP fields into content string
+        const content = `SUBJECTIVE:\n${session.assessment.subjective || 'N/A'}\n\nOBJECTIVE:\n${session.assessment.objective || 'N/A'}\n\nASSESSMENT:\n${session.assessment.assessment || 'N/A'}\n\nPLAN:\n${session.assessment.plan || 'N/A'}`;
+        
         const noteData = {
-          patient: session.patientId._id || session.patientId, // Handle populated or ID-only
-          session: session._id,
-          therapist: req.user._id,
+          patientId: session.patientId._id || session.patientId, // Handle populated or ID-only
+          sessionId: session._id,
+          therapistId: req.user._id,
           type: 'soap',
-          title: `Session Note - ${new Date(session.date).toLocaleDateString()}`,
-          subjective: session.subjective,
-          objective: session.objective,
-          assessment: session.assessment,
-          plan: session.plan
+          content: content,
+          transcription: session.audioTranscription || ''
         };
 
         // Check if note already exists for this session
-        const existingNote = await Note.findOne({ session: session._id });
+        const existingNote = await Note.findOne({ sessionId: session._id });
         
         if (existingNote) {
           await Note.findByIdAndUpdate(existingNote._id, noteData);
