@@ -237,6 +237,61 @@ const resources = {
         notSupported: 'Audio recording not supported'
       },
       
+      // Session Detail
+      sessionDetail: {
+        title: 'Session Documentation',
+        voiceRecording: 'Voice Recording',
+        painAssessment: 'Pain Assessment',
+        rangeOfMotion: 'Range of Motion',
+        strengthTesting: 'Strength Testing',
+        exercisePrescription: 'Exercise Prescription',
+        modalitiesUsed: 'Modalities Used',
+        billingCodes: 'Billing Codes',
+        saveSession: 'Save Session',
+        loadingSession: 'Loading session...',
+        sessionNotFound: 'Session not found',
+        processingAudio: 'Processing audio and generating SOAP note...',
+        transcription: 'Transcription:',
+        addROMTest: '+ Add ROM Test',
+        addStrengthTest: '+ Add Strength Test',
+        addExercise: '+ Add Exercise',
+        aiGenerate: '🤖 AI Generate',
+        aiSuggestCodes: '🤖 AI Suggest Codes',
+        homeProgram: 'Home Program',
+        selectGrade: 'Select Grade',
+        addBillingCode: 'Add billing code (e.g., 97110)',
+        modalities: {
+          ultrasound: 'Ultrasound',
+          tens: 'TENS',
+          heat: 'Heat',
+          ice: 'Ice',
+          manualTherapy: 'Manual Therapy',
+          dryNeedling: 'Dry Needling',
+          cupping: 'Cupping',
+          taping: 'Taping'
+        },
+        strengthGrades: {
+          normal: '5/5 - Normal',
+          good: '4/5 - Good',
+          fair: '3/5 - Fair',
+          poor: '2/5 - Poor',
+          trace: '1/5 - Trace',
+          zero: '0/5 - Zero'
+        },
+        placeholders: {
+          joint: 'Joint (e.g., Right Shoulder)',
+          movement: 'Movement (e.g., Flexion)',
+          measurement: 'Measurement (e.g., 120°)',
+          muscleGroup: 'Muscle Group',
+          notes: 'Notes',
+          exerciseName: 'Exercise Name',
+          sets: 'Sets',
+          reps: 'Reps',
+          instructions: 'Instructions...',
+          painLocation: 'e.g., Lower back, Right knee'
+        }
+      },
+      
       // Templates
       templates: {
         title: 'Templates',
@@ -570,6 +625,61 @@ const resources = {
         error: 'Falha ao processar gravação',
         noPermission: 'Acesso ao microfone negado',
         notSupported: 'Gravação de áudio não suportada'
+      },
+      
+      // Detalhes da Sessão
+      sessionDetail: {
+        title: 'Documentação da Sessão',
+        voiceRecording: 'Gravação de Voz',
+        painAssessment: 'Avaliação de Dor',
+        rangeOfMotion: 'Amplitude de Movimento',
+        strengthTesting: 'Teste de Força',
+        exercisePrescription: 'Prescrição de Exercícios',
+        modalitiesUsed: 'Modalidades Utilizadas',
+        billingCodes: 'Códigos de Faturamento',
+        saveSession: 'Salvar Sessão',
+        loadingSession: 'Carregando sessão...',
+        sessionNotFound: 'Sessão não encontrada',
+        processingAudio: 'Processando áudio e gerando nota SOAP...',
+        transcription: 'Transcrição:',
+        addROMTest: '+ Adicionar Teste ADM',
+        addStrengthTest: '+ Adicionar Teste de Força',
+        addExercise: '+ Adicionar Exercício',
+        aiGenerate: '🤖 IA Gerar',
+        aiSuggestCodes: '🤖 IA Sugerir Códigos',
+        homeProgram: 'Programa Domiciliar',
+        selectGrade: 'Selecionar Grau',
+        addBillingCode: 'Adicionar código de faturamento (ex: 97110)',
+        modalities: {
+          ultrasound: 'Ultrassom',
+          tens: 'TENS',
+          heat: 'Calor',
+          ice: 'Gelo',
+          manualTherapy: 'Terapia Manual',
+          dryNeedling: 'Agulhamento Seco',
+          cupping: 'Ventosaterapia',
+          taping: 'Bandagem'
+        },
+        strengthGrades: {
+          normal: '5/5 - Normal',
+          good: '4/5 - Bom',
+          fair: '3/5 - Regular',
+          poor: '2/5 - Fraco',
+          trace: '1/5 - Traço',
+          zero: '0/5 - Zero'
+        },
+        placeholders: {
+          joint: 'Articulação (ex: Ombro Direito)',
+          movement: 'Movimento (ex: Flexão)',
+          measurement: 'Medida (ex: 120°)',
+          muscleGroup: 'Grupo Muscular',
+          notes: 'Observações',
+          exerciseName: 'Nome do Exercício',
+          sets: 'Séries',
+          reps: 'Repetições',
+          instructions: 'Instruções...',
+          painLocation: 'ex: Lombar, Joelho direito'
+        }
       },
       
       // Modelos

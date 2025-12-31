@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { FiSave, FiArrowLeft, FiClock, FiUser, FiActivity } from 'react-icons/fi';
 import VoiceRecorder from '../components/VoiceRecorder';
 import sessionService from '../services/session.service';
@@ -11,6 +12,7 @@ const SessionDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [session, setSession] = useState(null);
@@ -229,7 +231,7 @@ const SessionDetail = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-gray-600">Loading session...</div>
+        <div className="text-lg text-gray-600">{t('sessionDetail.loadingSession')}</div>
       </div>
     );
   }
@@ -237,7 +239,7 @@ const SessionDetail = () => {
   if (!session || !patient) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-gray-600">Session not found</div>
+        <div className="text-lg text-gray-600">{t('sessionDetail.sessionNotFound')}</div>
       </div>
     );
   }
@@ -254,7 +256,7 @@ const SessionDetail = () => {
             <FiArrowLeft className="w-6 h-6" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold">Session Documentation</h1>
+            <h1 className="text-3xl font-bold">{t('sessionDetail.title')}</h1>
             <p className="text-gray-600 mt-1">
               <FiUser className="inline mr-2" />
               {patient.name} • {new Date(session.date).toLocaleDateString()}
@@ -267,23 +269,23 @@ const SessionDetail = () => {
           className="btn-primary flex items-center gap-2"
         >
           <FiSave />
-          {saving ? 'Saving...' : 'Save Session'}
+          {saving ? t('status.saving') : t('sessionDetail.saveSession')}
         </button>
       </div>
 
       {/* Voice Recorder Section */}
       <div className="card mb-6">
-        <h2 className="text-xl font-semibold mb-4">Voice Recording</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('sessionDetail.voiceRecording')}</h2>
         <VoiceRecorder onRecordingComplete={handleRecordingComplete} />
         {aiLoading && (
           <div className="mt-4 text-center text-blue-600">
             <FiActivity className="inline animate-spin mr-2" />
-            Processing audio and generating SOAP note...
+            {t('sessionDetail.processingAudio')}
           </div>
         )}
         {audioTranscription && (
           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-semibold mb-2">Transcription:</h3>
+            <h3 className="font-semibold mb-2">{t('sessionDetail.transcription')}</h3>
             <p className="text-gray-700">{String(audioTranscription)}</p>
           </div>
         )}
@@ -292,52 +294,52 @@ const SessionDetail = () => {
       {/* SOAP Note Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="card">
-          <h2 className="text-xl font-semibold mb-4">Subjective</h2>
+          <h2 className="text-xl font-semibold mb-4">{t('soap.subjective')}</h2>
           <textarea
             value={subjective}
             onChange={(e) => setSubjective(e.target.value)}
             className="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Patient's complaints, symptoms, history..."
+            placeholder={t('soap.placeholders.subjective')}
           />
         </div>
 
         <div className="card">
-          <h2 className="text-xl font-semibold mb-4">Objective</h2>
+          <h2 className="text-xl font-semibold mb-4">{t('soap.objective')}</h2>
           <textarea
             value={objective}
             onChange={(e) => setObjective(e.target.value)}
             className="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Observations, measurements, test results..."
+            placeholder={t('soap.placeholders.objective')}
           />
         </div>
 
         <div className="card">
-          <h2 className="text-xl font-semibold mb-4">Assessment</h2>
+          <h2 className="text-xl font-semibold mb-4">{t('soap.assessment')}</h2>
           <textarea
             value={assessment}
             onChange={(e) => setAssessment(e.target.value)}
             className="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Clinical interpretation, diagnosis, progress..."
+            placeholder={t('soap.placeholders.assessment')}
           />
         </div>
 
         <div className="card">
-          <h2 className="text-xl font-semibold mb-4">Plan</h2>
+          <h2 className="text-xl font-semibold mb-4">{t('soap.plan')}</h2>
           <textarea
             value={plan}
             onChange={(e) => setPlan(e.target.value)}
             className="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Treatment plan, goals, next steps..."
+            placeholder={t('soap.placeholders.plan')}
           />
         </div>
       </div>
 
       {/* Pain Scale */}
       <div className="card mb-6">
-        <h2 className="text-xl font-semibold mb-4">Pain Assessment</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('sessionDetail.painAssessment')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Current Pain (0-10)</label>
+            <label className="block text-sm font-medium mb-2">{t('physio.painFields.current')} (0-10)</label>
             <input
               type="number"
               min="0"
@@ -348,7 +350,7 @@ const SessionDetail = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Best Pain (0-10)</label>
+            <label className="block text-sm font-medium mb-2">{t('physio.painFields.best')} (0-10)</label>
             <input
               type="number"
               min="0"
@@ -359,7 +361,7 @@ const SessionDetail = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Worst Pain (0-10)</label>
+            <label className="block text-sm font-medium mb-2">{t('physio.painFields.worst')} (0-10)</label>
             <input
               type="number"
               min="0"
@@ -370,13 +372,13 @@ const SessionDetail = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Location</label>
+            <label className="block text-sm font-medium mb-2">{t('physio.painFields.location')}</label>
             <input
               type="text"
               value={painScale.location}
               onChange={(e) => setPainScale({ ...painScale, location: e.target.value })}
               className="w-full p-2 border border-gray-300 rounded-lg"
-              placeholder="e.g., Lower back, Right knee"
+              placeholder={t('sessionDetail.placeholders.painLocation')}
             />
           </div>
         </div>
@@ -385,16 +387,16 @@ const SessionDetail = () => {
       {/* Range of Motion */}
       <div className="card mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Range of Motion</h2>
+          <h2 className="text-xl font-semibold">{t('sessionDetail.rangeOfMotion')}</h2>
           <button onClick={addROMEntry} className="btn-secondary">
-            + Add ROM Test
+            {t('sessionDetail.addROMTest')}
           </button>
         </div>
         {rangeOfMotion.map((rom, index) => (
           <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
             <input
               type="text"
-              placeholder="Joint (e.g., Right Shoulder)"
+              placeholder={t('sessionDetail.placeholders.joint')}
               value={rom.joint}
               onChange={(e) => {
                 const updated = [...rangeOfMotion];
@@ -405,7 +407,7 @@ const SessionDetail = () => {
             />
             <input
               type="text"
-              placeholder="Movement (e.g., Flexion)"
+              placeholder={t('sessionDetail.placeholders.movement')}
               value={rom.movement}
               onChange={(e) => {
                 const updated = [...rangeOfMotion];
@@ -416,7 +418,7 @@ const SessionDetail = () => {
             />
             <input
               type="text"
-              placeholder="Measurement (e.g., 120°)"
+              placeholder={t('sessionDetail.placeholders.measurement')}
               value={rom.measurement}
               onChange={(e) => {
                 const updated = [...rangeOfMotion];
@@ -432,16 +434,16 @@ const SessionDetail = () => {
       {/* Strength Testing */}
       <div className="card mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Strength Testing</h2>
+          <h2 className="text-xl font-semibold">{t('sessionDetail.strengthTesting')}</h2>
           <button onClick={addStrengthEntry} className="btn-secondary">
-            + Add Strength Test
+            {t('sessionDetail.addStrengthTest')}
           </button>
         </div>
         {strengthTest.map((test, index) => (
           <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
             <input
               type="text"
-              placeholder="Muscle Group"
+              placeholder={t('sessionDetail.placeholders.muscleGroup')}
               value={test.muscle}
               onChange={(e) => {
                 const updated = [...strengthTest];
@@ -459,17 +461,17 @@ const SessionDetail = () => {
               }}
               className="p-2 border border-gray-300 rounded-lg"
             >
-              <option value="">Select Grade</option>
-              <option value="5/5">5/5 - Normal</option>
-              <option value="4/5">4/5 - Good</option>
-              <option value="3/5">3/5 - Fair</option>
-              <option value="2/5">2/5 - Poor</option>
-              <option value="1/5">1/5 - Trace</option>
-              <option value="0/5">0/5 - Zero</option>
+              <option value="">{t('sessionDetail.selectGrade')}</option>
+              <option value="5/5">{t('sessionDetail.strengthGrades.normal')}</option>
+              <option value="4/5">{t('sessionDetail.strengthGrades.good')}</option>
+              <option value="3/5">{t('sessionDetail.strengthGrades.fair')}</option>
+              <option value="2/5">{t('sessionDetail.strengthGrades.poor')}</option>
+              <option value="1/5">{t('sessionDetail.strengthGrades.trace')}</option>
+              <option value="0/5">{t('sessionDetail.strengthGrades.zero')}</option>
             </select>
             <input
               type="text"
-              placeholder="Notes"
+              placeholder={t('sessionDetail.placeholders.notes')}
               value={test.notes}
               onChange={(e) => {
                 const updated = [...strengthTest];
@@ -485,17 +487,17 @@ const SessionDetail = () => {
       {/* Exercise Prescription */}
       <div className="card mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Exercise Prescription</h2>
+          <h2 className="text-xl font-semibold">{t('sessionDetail.exercisePrescription')}</h2>
           <div className="flex gap-2">
             <button
               onClick={handleGenerateExercises}
               disabled={aiLoading}
               className="btn-secondary"
             >
-              🤖 AI Generate
+              {t('sessionDetail.aiGenerate')}
             </button>
             <button onClick={addExercise} className="btn-secondary">
-              + Add Exercise
+              {t('sessionDetail.addExercise')}
             </button>
           </div>
         </div>
@@ -504,7 +506,7 @@ const SessionDetail = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
               <input
                 type="text"
-                placeholder="Exercise Name"
+                placeholder={t('sessionDetail.placeholders.exerciseName')}
                 value={exercise.type}
                 onChange={(e) => {
                   const updated = [...exercises];
@@ -515,7 +517,7 @@ const SessionDetail = () => {
               />
               <input
                 type="number"
-                placeholder="Sets"
+                placeholder={t('sessionDetail.placeholders.sets')}
                 value={exercise.sets}
                 onChange={(e) => {
                   const updated = [...exercises];
@@ -526,7 +528,7 @@ const SessionDetail = () => {
               />
               <input
                 type="number"
-                placeholder="Reps"
+                placeholder={t('sessionDetail.placeholders.reps')}
                 value={exercise.reps}
                 onChange={(e) => {
                   const updated = [...exercises];
@@ -546,11 +548,11 @@ const SessionDetail = () => {
                   }}
                   className="w-4 h-4"
                 />
-                <span className="text-sm">Home Program</span>
+                <span className="text-sm">{t('sessionDetail.homeProgram')}</span>
               </label>
             </div>
             <textarea
-              placeholder="Instructions..."
+              placeholder={t('sessionDetail.placeholders.instructions')}
               value={exercise.instructions}
               onChange={(e) => {
                 const updated = [...exercises];
@@ -566,23 +568,32 @@ const SessionDetail = () => {
 
       {/* Modalities Used */}
       <div className="card mb-6">
-        <h2 className="text-xl font-semibold mb-4">Modalities Used</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('sessionDetail.modalitiesUsed')}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {['Ultrasound', 'TENS', 'Heat', 'Ice', 'Manual Therapy', 'Dry Needling', 'Cupping', 'Taping'].map((modality) => (
-            <label key={modality} className="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+          {[
+            { key: 'ultrasound', label: t('sessionDetail.modalities.ultrasound') },
+            { key: 'tens', label: t('sessionDetail.modalities.tens') },
+            { key: 'heat', label: t('sessionDetail.modalities.heat') },
+            { key: 'ice', label: t('sessionDetail.modalities.ice') },
+            { key: 'manualTherapy', label: t('sessionDetail.modalities.manualTherapy') },
+            { key: 'dryNeedling', label: t('sessionDetail.modalities.dryNeedling') },
+            { key: 'cupping', label: t('sessionDetail.modalities.cupping') },
+            { key: 'taping', label: t('sessionDetail.modalities.taping') }
+          ].map(({ key, label }) => (
+            <label key={key} className="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
               <input
                 type="checkbox"
-                checked={modalitiesUsed.includes(modality)}
+                checked={modalitiesUsed.includes(label)}
                 onChange={(e) => {
                   if (e.target.checked) {
-                    setModalitiesUsed([...modalitiesUsed, modality]);
+                    setModalitiesUsed([...modalitiesUsed, label]);
                   } else {
-                    setModalitiesUsed(modalitiesUsed.filter(m => m !== modality));
+                    setModalitiesUsed(modalitiesUsed.filter(m => m !== label));
                   }
                 }}
                 className="w-4 h-4"
               />
-              <span className="text-sm">{modality}</span>
+              <span className="text-sm">{label}</span>
             </label>
           ))}
         </div>
@@ -591,13 +602,13 @@ const SessionDetail = () => {
       {/* Billing Codes */}
       <div className="card mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Billing Codes</h2>
+          <h2 className="text-xl font-semibold">{t('sessionDetail.billingCodes')}</h2>
           <button
             onClick={handleSuggestBillingCodes}
             disabled={aiLoading}
             className="btn-secondary"
           >
-            🤖 AI Suggest Codes
+            {t('sessionDetail.aiSuggestCodes')}
           </button>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -609,7 +620,7 @@ const SessionDetail = () => {
         </div>
         <input
           type="text"
-          placeholder="Add billing code (e.g., 97110)"
+          placeholder={t('sessionDetail.addBillingCode')}
           onKeyPress={(e) => {
             if (e.key === 'Enter' && e.target.value.trim()) {
               setBillingCodes([...billingCodes, e.target.value.trim()]);
@@ -627,7 +638,7 @@ const SessionDetail = () => {
             onClick={() => navigate(-1)}
             className="btn-secondary"
           >
-            Cancel
+            {t('actions.cancel')}
           </button>
           <button
             onClick={handleSaveSession}
@@ -635,7 +646,7 @@ const SessionDetail = () => {
             className="btn-primary flex items-center gap-2"
           >
             <FiSave />
-            {saving ? 'Saving...' : 'Save Session'}
+            {saving ? t('status.saving') : t('sessionDetail.saveSession')}
           </button>
         </div>
       </div>
