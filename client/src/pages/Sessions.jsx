@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FiCalendar, FiClock, FiUser, FiPlus } from 'react-icons/fi';
-import sessionService from '../services/session.service';
+import { useSessions } from '../hooks';
 import NewSessionModal from '../components/NewSessionModal';
 import { format } from 'date-fns';
 import { Card, CardContent } from '../components/ui/Card';
@@ -13,27 +13,11 @@ import { Skeleton } from '../components/ui/Skeleton';
 const Sessions = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [sessions, setSessions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: sessions = [], isLoading } = useSessions();
   const [filter, setFilter] = useState('all'); // all, today, upcoming, completed
   const [showNewSessionModal, setShowNewSessionModal] = useState(false);
 
-  useEffect(() => {
-    fetchSessions();
-  }, []);
-
-  const fetchSessions = async () => {
-    try {
-      const data = await sessionService.getSessions();
-      setSessions(data);
-    } catch (error) {
-      console.error('Error fetching sessions:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterSessions = (sessions) => {
+  const filteredSessions = useMemo(() => {
     const today = new Date().toDateString();
     
     switch (filter) {
@@ -46,11 +30,9 @@ const Sessions = () => {
       default:
         return sessions;
     }
-  };
+  }, [sessions, filter]);
 
-  const filteredSessions = filterSessions(sessions);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -203,7 +185,7 @@ const Sessions = () => {
         isOpen={showNewSessionModal}
         onClose={() => setShowNewSessionModal(false)}
         onSessionCreated={(newSession) => {
-          fetchSessions(); // Refresh the list
+          // React Query will automatically refetch sessions
           navigate(`/sessions/${newSession._id}`); // Navigate to new session
         }}
       />

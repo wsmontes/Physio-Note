@@ -1,14 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
   FiSearch, FiFilter, FiFileText, FiUser, FiCalendar, 
   FiChevronDown, FiChevronUp, FiExternalLink 
 } from 'react-icons/fi';
-import noteService from '../services/note.service';
-import patientService from '../services/patient.service';
-import sessionService from '../services/session.service';
-import { useToast } from '../context/ToastContext';
+import { useNotes, usePatients } from '../hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -17,36 +14,15 @@ import { Skeleton } from '../components/ui/Skeleton';
 
 const Notes = () => {
   const { t } = useTranslation();
-  const toast = useToast();
-  const [notes, setNotes] = useState([]);
-  const [patients, setPatients] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: notes = [], isLoading: notesLoading } = useNotes();
+  const { data: patients = [], isLoading: patientsLoading } = usePatients();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all'); // all, soap, progress, discharge
   const [filterPatient, setFilterPatient] = useState('all');
   const [expandedNotes, setExpandedNotes] = useState(new Set());
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [notesData, patientsData] = await Promise.all([
-        noteService.getNotes(),
-        patientService.getPatients()
-      ]);
-      
-      setNotes(notesData);
-      setPatients(patientsData);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error(error.userMessage || 'Failed to load notes');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const isLoading = notesLoading || patientsLoading;
 
   const toggleNoteExpansion = (noteId) => {
     const newExpanded = new Set(expandedNotes);
@@ -67,17 +43,7 @@ const Notes = () => {
     return patient ? `${patient.firstName} ${patient.lastName}` : 'Unknown Patient';
   };
 
-  const getNoteTypeColor = (type) => {
-    const colors = {
-      'soap': 'bg-blue-100 text-blue-700',
-      'progress': 'bg-green-100 text-green-700',
-      'discharge': 'bg-purple-100 text-purple-700',
-      'initial': 'bg-yellow-100 text-yellow-700'
-    };
-    return colors[type] || 'bg-gray-100 text-gray-700';
-  };
-
-  const filteredNotes = notes.filter(note => {
+  const filteredNotes = useMemo(() => notes.filter(note => {
     // Search filter
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = 
@@ -93,9 +59,9 @@ const Notes = () => {
       (typeof note.patientId === 'object' ? note.patientId._id : note.patientId) === filterPatient;
 
     return matchesSearch && matchesType && matchesPatient;
-  });
+  }), [notes, searchTerm, filterType, filterPatient, patients]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between mb-6">

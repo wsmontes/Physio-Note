@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FiPlus, FiSearch, FiUser, FiX } from 'react-icons/fi';
-import patientService from '../services/patient.service';
-import { useToast } from '../context/ToastContext';
+import { usePatients, useCreatePatient } from '../hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -12,10 +11,9 @@ import { Badge } from '../components/ui/Badge';
 
 const Patients = () => {
   const { t } = useTranslation();
-  const toast = useToast();
-  const [patients, setPatients] = useState([]);
-  const [filteredPatients, setFilteredPatients] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: patients = [], isLoading } = usePatients();
+  const createPatient = useCreatePatient();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newPatient, setNewPatient] = useState({
@@ -28,70 +26,47 @@ const Patients = () => {
     address: ''
   });
 
-  useEffect(() => {
-    fetchPatients();
-  }, []);
-
-  useEffect(() => {
-    if (searchTerm) {
-      const filtered = patients.filter(p =>
-        `${p.firstName} ${p.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.email?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredPatients(filtered);
-    } else {
-      setFilteredPatients(patients);
-    }
+  const filteredPatients = useMemo(() => {
+    if (!searchTerm) return patients;
+    return patients.filter(p =>
+      `${p.firstName} ${p.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   }, [searchTerm, patients]);
-
-  const fetchPatients = async () => {
-    try {
-      const data = await patientService.getPatients();
-      setPatients(data);
-      setFilteredPatients(data);
-    } catch (error) {
-      console.error('Error fetching patients:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAddPatient = async (e) => {
     e.preventDefault();
-    try {
-      // Clean up the data - remove empty optional fields
-      const patientData = {
-        firstName: newPatient.firstName,
-        lastName: newPatient.lastName,
-      };
-      
-      // Only add optional fields if they have values
-      if (newPatient.dateOfBirth) patientData.dateOfBirth = newPatient.dateOfBirth;
-      if (newPatient.gender) patientData.gender = newPatient.gender;
-      if (newPatient.phone) patientData.phone = newPatient.phone;
-      if (newPatient.email) patientData.email = newPatient.email;
-      if (newPatient.address) patientData.address = newPatient.address;
+    
+    // Clean up the data - remove empty optional fields
+    const patientData = {
+      firstName: newPatient.firstName,
+      lastName: newPatient.lastName,
+    };
+    
+    // Only add optional fields if they have values
+    if (newPatient.dateOfBirth) patientData.dateOfBirth = newPatient.dateOfBirth;
+    if (newPatient.gender) patientData.gender = newPatient.gender;
+    if (newPatient.phone) patientData.phone = newPatient.phone;
+    if (newPatient.email) patientData.email = newPatient.email;
+    if (newPatient.address) patientData.address = newPatient.address;
 
-      await patientService.createPatient(patientData);
-      setShowAddModal(false);
-      setNewPatient({
-        firstName: '',
-        lastName: '',
-        dateOfBirth: '',
-        gender: '',
-        phone: '',
-        email: '',
-        address: ''
-      });
-      fetchPatients();
-      toast.success('Patient added successfully!');
-    } catch (error) {
-      console.error('Error adding patient:', error);
-      toast.error(error.userMessage || 'Failed to add patient');
-    }
+    createPatient.mutate(patientData, {
+      onSuccess: () => {
+        setShowAddModal(false);
+        setNewPatient({
+          firstName: '',
+          lastName: '',
+          dateOfBirth: '',
+          gender: '',
+          phone: '',
+          email: '',
+          address: ''
+        });
+      }
+    });
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
