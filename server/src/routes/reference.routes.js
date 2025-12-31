@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth.middleware');
 
-// Import reference data libraries
-const { romReference, getJoints } = require('../data/rom-reference');
-const mmtReference = require('../data/mmt-reference');
-const specialTests = require('../data/special-tests');
-const cptCodes = require('../data/cpt-codes');
+// Import reference data libraries with proper destructuring
+const { romReference, getJoints, getMovements } = require('../data/rom-reference');
+const { mmtGrades, muscleGroups, getRegions, getMusclesByRegion, getGrades, getTestPositions } = require('../data/mmt-reference');
+const { specialTests, getBodyRegions, getTestsByRegion, getAllTests, getTestById, searchTests } = require('../data/special-tests');
+const { cptCodes, modifiers, getAllCodes, getCodesByCategory, getCodeByNumber, getCommonCodes, searchCodes, calculate8MinuteRuleUnits, validateBilling } = require('../data/cpt-codes');
 const icd10Codes = require('../data/icd10-codes');
 
 /**
@@ -34,7 +34,7 @@ router.get('/rom', auth, (req, res) => {
 router.get('/rom/:joint', auth, (req, res) => {
   try {
     const { joint } = req.params;
-    const movements = romReference.getMovements(joint);
+    const movements = getMovements(joint);
     
     if (!movements || movements.length === 0) {
       return res.status(404).json({ message: 'Joint not found' });
@@ -55,10 +55,10 @@ router.get('/rom/:joint', auth, (req, res) => {
 router.get('/mmt', auth, (req, res) => {
   try {
     res.json({
-      regions: mmtReference.getRegions(),
-      grades: mmtReference.getGrades(),
-      testPositions: mmtReference.getTestPositions(),
-      muscleGroups: mmtReference.muscleGroups
+      regions: getRegions(),
+      grades: getGrades(),
+      testPositions: getTestPositions(),
+      muscleGroups: muscleGroups
     });
   } catch (error) {
     console.error('Error fetching MMT reference:', error);
@@ -74,7 +74,7 @@ router.get('/mmt', auth, (req, res) => {
 router.get('/mmt/:region', auth, (req, res) => {
   try {
     const { region } = req.params;
-    const muscles = mmtReference.getMusclesByRegion(region);
+    const muscles = getMusclesByRegion(region);
     
     if (!muscles || muscles.length === 0) {
       return res.status(404).json({ message: 'Region not found' });
@@ -100,16 +100,16 @@ router.get('/special-tests', auth, (req, res) => {
     
     let tests;
     if (search) {
-      tests = specialTests.searchTests(search);
+      tests = searchTests(search);
     } else if (region) {
-      tests = specialTests.getTestsByRegion(region);
+      tests = getTestsByRegion(region);
     } else {
-      tests = specialTests.getAllTests();
+      tests = getAllTests();
     }
     
     res.json({
       count: tests.length,
-      bodyRegions: specialTests.getBodyRegions(),
+      bodyRegions: getBodyRegions(),
       tests
     });
   } catch (error) {
@@ -126,7 +126,7 @@ router.get('/special-tests', auth, (req, res) => {
 router.get('/special-tests/:id', auth, (req, res) => {
   try {
     const { id } = req.params;
-    const test = specialTests.getTestById(id);
+    const test = getTestById(id);
     
     if (!test) {
       return res.status(404).json({ message: 'Test not found' });
@@ -153,19 +153,19 @@ router.get('/cpt-codes', auth, (req, res) => {
     
     let codes;
     if (common === 'true') {
-      codes = cptCodes.getCommonCodes();
+      codes = getCommonCodes();
     } else if (search) {
-      codes = cptCodes.searchCodes(search);
+      codes = searchCodes(search);
     } else if (category) {
-      codes = cptCodes.getCodesByCategory(category);
+      codes = getCodesByCategory(category);
     } else {
-      codes = cptCodes.getAllCodes();
+      codes = getAllCodes();
     }
     
     res.json({
       count: codes.length,
-      categories: Object.keys(cptCodes.cptCodes),
-      modifiers: cptCodes.modifiers,
+      categories: Object.keys(cptCodes),
+      modifiers: modifiers,
       codes
     });
   } catch (error) {
@@ -182,7 +182,7 @@ router.get('/cpt-codes', auth, (req, res) => {
 router.get('/cpt-codes/:code', auth, (req, res) => {
   try {
     const { code } = req.params;
-    const codeDetails = cptCodes.getCodeByNumber(code);
+    const codeDetails = getCodeByNumber(code);
     
     if (!codeDetails) {
       return res.status(404).json({ message: 'CPT code not found' });
@@ -208,7 +208,7 @@ router.post('/billing/calculate-units', auth, (req, res) => {
       return res.status(400).json({ message: 'Invalid minutes value' });
     }
     
-    const units = cptCodes.calculate8MinuteRuleUnits(minutes);
+    const units = calculate8MinuteRuleUnits(minutes);
     
     res.json({ minutes, units });
   } catch (error) {
@@ -230,7 +230,7 @@ router.post('/billing/validate', auth, (req, res) => {
       return res.status(400).json({ message: 'cptEntries must be an array' });
     }
     
-    const validation = cptCodes.validateBilling(cptEntries);
+    const validation = validateBilling(cptEntries);
     
     res.json(validation);
   } catch (error) {
