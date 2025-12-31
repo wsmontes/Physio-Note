@@ -2,7 +2,9 @@
 
 ## Architecture Patterns
 
-**Stack**: MERN (MongoDB, Express, React, Node.js)
+**Stack**: MERN (MongoDB, Express, React, Node.js)  
+**Deployment**: Render.com (Backend + Frontend static site)  
+**Database**: MongoDB Atlas
 
 ```
 client/                 # Frontend (React + Vite)
@@ -29,6 +31,13 @@ server/                # Backend (Express + MongoDB)
 - API calls isolated in service files
 - Design System for consistent UI
 
+**API Patterns**:
+- Base URL from environment: `VITE_API_URL` (client) / `PORT` (server)
+- All endpoints prefixed with `/api`
+- JWT auth via `Authorization: Bearer <token>` header
+- RESTful conventions: GET (list/detail), POST (create), PUT (update), DELETE (remove)
+- Standard responses: `{ data }` (success) or `{ message, userMessage }` (error)
+
 ## Design Patterns
 
 ### Backend
@@ -42,6 +51,22 @@ router.post('/patients', auth, validate(schema), async (req, res, next) => {
     next(error); // Centralized error handler
   }
 });
+```
+
+### API Service Layer (Frontend)
+```javascript
+// services/patient.service.js
+import axios from './axios.config';
+
+const getPatients = async () => {
+  const { data } = await axios.get('/patients');
+  return data;
+};
+
+const createPatient = async (patientData) => {
+  const { data } = await axios.post('/patients', patientData);
+  return data;
+};
 ```
 
 ### Frontend Components
