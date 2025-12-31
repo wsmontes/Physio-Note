@@ -7,6 +7,7 @@ import sessionService from '../services/session.service';
 import patientService from '../services/patient.service';
 import aiService from '../services/ai.service';
 import { useToast } from '../context/ToastContext';
+import { useTemplates } from '../hooks';
 
 const SessionDetail = () => {
   const { id } = useParams();
@@ -18,6 +19,10 @@ const SessionDetail = () => {
   const [session, setSession] = useState(null);
   const [patient, setPatient] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
+
+  // Template selection
+  const { data: templates = [], isLoading: templatesLoading } = useTemplates();
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   // SOAP Note sections
   const [subjective, setSubjective] = useState('');
@@ -117,8 +122,11 @@ const SessionDetail = () => {
         diagnosis: session?.diagnosis || '',
         previousNotes: session?.subjective || ''
       };
+
+      // Use selected template instructions if available
+      const templateInstructions = selectedTemplate?.promptInstructions || 'soap';
       
-      const response = await aiService.generateNote(transcriptionText, context, 'soap');
+      const response = await aiService.generateNote(transcriptionText, context, templateInstructions);
       console.log('SOAP note response:', response);
       console.log('Note object:', response.note);
       console.log('Note content:', response.note?.content);
@@ -272,6 +280,35 @@ const SessionDetail = () => {
           {saving ? t('status.saving') : t('sessionDetail.saveSession')}
         </button>
       </div>
+
+      {/* Template Selector */}
+      {!templatesLoading && templates.length > 0 && (
+        <div className="card mb-6">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-700">
+              {t('templates.title')}
+            </label>
+            <select
+              value={selectedTemplate?._id || ''}
+              onChange={(e) => {
+                const template = templates.find(t => t._id === e.target.value);
+                setSelectedTemplate(template || null);
+              }}
+              className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">{t('templates.fields.type')} - Default SOAP</option>
+              {templates.map((template) => (
+                <option key={template._id} value={template._id}>
+                  {template.name} ({t(`templates.specialties.${template.specialty}`)})
+                </option>
+              ))}
+            </select>
+          </div>
+          {selectedTemplate?.description && (
+            <p className="text-sm text-gray-600 mt-2">{selectedTemplate.description}</p>
+          )}
+        </div>
+      )}
 
       {/* Voice Recorder Section */}
       <div className="card mb-6">

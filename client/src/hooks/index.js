@@ -28,3 +28,12 @@ export {
   useUpdateNote, 
   useDeleteNote 
 } from './useNotes';
+
+export { 
+  useTemplates, 
+  useTemplate, 
+  useCreateTemplate, 
+  useUpdateTemplate, 
+  useDeleteTemplate, 
+  useCloneTemplate 
+} from './useTemplates';

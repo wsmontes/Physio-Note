@@ -1,33 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FiPlus, FiEdit2, FiTrash2, FiCopy, FiGlobe, FiLock } from 'react-icons/fi';
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge, LoadingPage } from '../components/ui';
-import templateService from '../services/template.service';
+import { useTemplates, useCreateTemplate, useUpdateTemplate, useDeleteTemplate, useCloneTemplate } from '../hooks';
 import { useToast } from '../context/ToastContext';
 import TemplateEditor from '../components/templates/TemplateEditor';
 
 const Templates = () => {
-  const [templates, setTemplates] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
+  const { data: templates = [], isLoading } = useTemplates();
+  const createTemplate = useCreateTemplate();
+  const updateTemplate = useUpdateTemplate();
+  const deleteTemplate = useDeleteTemplate();
+  const cloneTemplate = useCloneTemplate();
   const [showEditor, setShowEditor] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const toast = useToast();
-
-  useEffect(() => {
-    fetchTemplates();
-  }, []);
-
-  const fetchTemplates = async () => {
-    try {
-      setLoading(true);
-      const data = await templateService.getTemplates();
-      setTemplates(data);
-    } catch (error) {
-      console.error('Error fetching templates:', error);
-      toast.error('Failed to load templates');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreate = () => {
     setEditingTemplate(null);
@@ -43,47 +31,35 @@ const Templates = () => {
     if (!window.confirm('Are you sure you want to delete this template?')) {
       return;
     }
-
-    try {
-      await templateService.deleteTemplate(id);
-      toast.success('Template deleted successfully');
-      fetchTemplates();
-    } catch (error) {
-      console.error('Error deleting template:', error);
-      toast.error('Failed to delete template');
-    }
+    deleteTemplate.mutate(id);
   };
 
   const handleClone = async (id) => {
-    try {
-      await templateService.cloneTemplate(id);
-      toast.success('Template cloned successfully');
-      fetchTemplates();
-    } catch (error) {
-      console.error('Error cloning template:', error);
-      toast.error('Failed to clone template');
-    }
+    cloneTemplate.mutate(id);
   };
 
   const handleSave = async (templateData) => {
-    try {
-      if (editingTemplate) {
-        await templateService.updateTemplate(editingTemplate._id, templateData);
-        toast.success('Template updated successfully');
-      } else {
-        await templateService.createTemplate(templateData);
-        toast.success('Template created successfully');
-      }
-      setShowEditor(false);
-      setEditingTemplate(null);
-      fetchTemplates();
-    } catch (error) {
-      console.error('Error saving template:', error);
-      toast.error('Failed to save template');
+    if (editingTemplate) {
+      updateTemplate.mutate(
+        { id: editingTemplate._id, data: templateData },
+        {
+          onSuccess: () => {
+            setShowEditor(false);
+            setEditingTemplate(null);
+          }
+        }
+      );
+    } else {
+      createTemplate.mutate(templateData, {
+        onSuccess: () => {
+          setShowEditor(false);
+          setEditingTemplate(null);
+        }
+      });
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return <LoadingPage />;
   }
 
@@ -104,13 +80,13 @@ const Templates = () => {
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Note Templates</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('templates.title')}</h1>
           <p className="mt-2 text-gray-600">
-            Create and manage customizable note templates for your documentation
+            {t('templates.fields.description')}
           </p>
         </div>
         <Button onClick={handleCreate} leftIcon={<FiPlus />} size="lg">
-          New Template
+          {t('templates.newTemplate')}
         </Button>
       </div>
 
@@ -118,9 +94,9 @@ const Templates = () => {
         {templates.length === 0 ? (
           <Card className="col-span-full">
             <CardContent className="py-12 text-center">
-              <p className="text-gray-500 mb-4">No templates yet</p>
+              <p className="text-gray-500 mb-4">{t('templates.noTemplates')}</p>
               <Button onClick={handleCreate} leftIcon={<FiPlus />}>
-                Create Your First Template
+                {t('templates.newTemplate')}
               </Button>
             </CardContent>
           </Card>
@@ -133,13 +109,13 @@ const Templates = () => {
                     <CardTitle className="text-lg mb-2">{template.name}</CardTitle>
                     <div className="flex items-center gap-2 mb-2">
                       <Badge variant={template.type === 'soap' ? 'default' : 'secondary'}>
-                        {template.type.toUpperCase()}
+                        {t(`templates.types.${template.type}`)}
                       </Badge>
-                      <Badge variant="secondary">{template.specialty}</Badge>
+                      <Badge variant="secondary">{t(`templates.specialties.${template.specialty}`)}</Badge>
                       {template.isPublic ? (
-                        <FiGlobe className="h-4 w-4 text-blue-600" title="Public" />
+                        <FiGlobe className="h-4 w-4 text-blue-600" title={t('templates.publicTemplates')} />
                       ) : (
-                        <FiLock className="h-4 w-4 text-gray-400" title="Private" />
+                        <FiLock className="h-4 w-4 text-gray-400" title={t('templates.myTemplates')} />
                       )}
                     </div>
                   </div>
@@ -151,14 +127,14 @@ const Templates = () => {
               <CardContent>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-500">
-                    {template.structure?.sections?.length || 0} sections
+                    {template.structure?.sections?.length || 0} {t('templates.fields.sections').toLowerCase()}
                   </span>
                   <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleClone(template._id)}
-                      title="Clone"
+                      title={t('actions.clone')}
                     >
                       <FiCopy className="h-4 w-4" />
                     </Button>
@@ -166,7 +142,7 @@ const Templates = () => {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleEdit(template)}
-                      title="Edit"
+                      title={t('actions.edit')}
                     >
                       <FiEdit2 className="h-4 w-4" />
                     </Button>
@@ -174,7 +150,7 @@ const Templates = () => {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(template._id)}
-                      title="Delete"
+                      title={t('actions.delete')}
                     >
                       <FiTrash2 className="h-4 w-4 text-red-600" />
                     </Button>
