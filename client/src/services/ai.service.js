@@ -137,6 +137,9 @@ export default {
   transcribeAudio,
   generateNote,
   generateExerciseProgram,
+  generateExerciseProgramAgent,
+  generateSOAPNoteAgent,
+  getClinicalRecommendation,
   suggestBillingCodes,
   extractPhysiotherapyData,
   transcribeAndGenerate

@@ -86,14 +86,14 @@ const EvidencePanel = ({ metadata }) => {
               rel="noopener noreferrer"
               className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-start gap-2 group"
             >
-              <span className="flex-1">{source.title}</span>
+              <span className="flex-1">{String(source.title || 'Untitled')}</span>
               <ExternalLink className="h-3 w-3 flex-shrink-0 mt-1 opacity-0 group-hover:opacity-100 transition-opacity" />
             </a>
 
             {/* Authors */}
             {source.authors && (
               <p className="text-xs text-gray-600 mt-1 line-clamp-1">
-                {source.authors}
+                {Array.isArray(source.authors) ? source.authors.join(', ') : source.authors}
               </p>
             )}
 
