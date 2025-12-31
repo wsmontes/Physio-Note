@@ -6,7 +6,7 @@ export const transcribeAudio = async (audioFile, duration) => {
   formData.append('audio', audioFile);
   if (duration) formData.append('duration', duration);
 
-  const response = await axiosInstance.post('/ai/transcribe', formData, {
+  const response = await axiosInstance.post('ai/transcribe', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     },
@@ -17,7 +17,7 @@ export const transcribeAudio = async (audioFile, duration) => {
 
 // Generate SOAP note from transcription
 export const generateNote = async (transcription, context = {}, template = 'soap') => {
-  const response = await axiosInstance.post('/ai/generate-note', {
+  const response = await axiosInstance.post('ai/generate-note', {
     transcription,
     context,
     template
@@ -29,7 +29,7 @@ export const generateNote = async (transcription, context = {}, template = 'soap
 
 // Generate exercise program
 export const generateExerciseProgram = async (sessionData, patientGoals) => {
-  const response = await axiosInstance.post('/ai/exercise-program', {
+  const response = await axiosInstance.post('ai/exercise-program', {
     sessionData,
     patientGoals
   }, {
@@ -40,7 +40,7 @@ export const generateExerciseProgram = async (sessionData, patientGoals) => {
 
 // Suggest billing codes
 export const suggestBillingCodes = async (sessionData) => {
-  const response = await axiosInstance.post('/ai/billing-codes', {
+  const response = await axiosInstance.post('ai/billing-codes', {
     sessionData
   }, {
     timeout: 30000 // 30 seconds for billing codes
@@ -55,7 +55,7 @@ export const transcribeAndGenerate = async (audioFile, context = {}, template = 
   formData.append('context', JSON.stringify(context));
   formData.append('template', template);
 
-  const response = await axiosInstance.post('/ai/transcribe-and-generate', formData, {
+  const response = await axiosInstance.post('ai/transcribe-and-generate', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     },
