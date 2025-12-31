@@ -9,10 +9,28 @@ const app = express();
 
 // Middleware
 app.use(helmet()); // Security headers
-app.use(cors()); // Enable CORS
+
+// CORS configuration
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  credentials: true
+};
+app.use(cors(corsOptions)); // Enable CORS with config
+
 app.use(morgan('dev')); // Logging
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true }));
+
+// Health check endpoint for monitoring/Render
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
 
 // Database connection
 mongoose.connect(process.env.MONGODB_URI)

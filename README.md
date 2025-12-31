@@ -2,6 +2,20 @@
 
 An AI-powered medical scribe application designed specifically for physiotherapists, inspired by Heidi AI Medical Scribe.
 
+## ⚠️ IMPORTANT NOTICE
+
+**This application is currently NOT ready for production use with real patient data.**
+
+- ❌ Not HIPAA compliant (no audit trails, encryption at rest, or BAA agreements)
+- ❌ Security rating: 2/5 (Development/Demo only)
+- ✅ Safe for: Testing, demos, portfolio, development with fake data
+
+**See [PRODUCTION_WARNING.md](PRODUCTION_WARNING.md) for legal implications and requirements.**
+
+**For deployment:** See [RENDER_QUICKSTART.md](RENDER_QUICKSTART.md) (15-min guide) or [DEPLOYMENT.md](DEPLOYMENT.md) (comprehensive guide)
+
+---
+
 ## 🎯 Overview
 
 Physio-Note streamlines documentation for physiotherapy sessions, helping practitioners focus more on patient care and less on paperwork. The application uses AI to assist with note-taking, treatment planning, and clinical documentation.

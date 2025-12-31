@@ -1,0 +1,36 @@
+# Files to exclude from Render builds
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+
+# Development
+node_modules/
+.DS_Store
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+.cache/
+.temp/
+
+# Documentation (not needed in deployment)
+*.md
+!README.md
+
+# Local development
+openai-debug.log
