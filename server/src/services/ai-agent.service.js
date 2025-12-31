@@ -454,41 +454,68 @@ For each step, specify:
 
 Format as a numbered list of action steps.`;
 
-    const planResponse = await this.openai.chat.completions.create({
+    console.log('\\n========================================');
+    console.log('[PHASE 1: PLANNING] Starting...');
+    console.log('Diagnosis:', diagnosis);
+    console.log('Impairments:', impairments.length, 'items');
+    console.log('Goals:', goals);
+    console.log('========================================\\n');
+    
+    console.log('[Phase 1] Sending planning prompt to OpenAI gpt-5-nano...');
+    const planResponse = await this.openai.responses.create({
       model: this.model,
-      messages: [
+      input: [
         { 
-          role: 'system', 
+          role: 'developer', 
           content: 'You are an autonomous clinical AI agent that plans multi-step workflows. Think carefully and create comprehensive plans.' 
         },
         { role: 'user', content: planningPrompt }
       ],
-      temperature: 0.3, // Lower temperature for planning
-      max_tokens: 1000
+      text: { verbosity: 'medium' }
     });
 
-    const plan = planResponse.choices[0].message.content;
-    console.log('[Exercise Agent] Generated Plan:', plan);
+    // Extract text from response.output
+    let plan = '';
+    for (const item of planResponse.output) {
+      if (item.content) {
+        for (const content of item.content) {
+          if (content.text) {
+            plan += content.text;
+          }
+        }
+      }
+    }
+    console.log('[Phase 1] Plan received from OpenAI');
+    console.log('Plan preview:', plan.substring(0, 200) + '...');
+    
+    console.log('[Phase 1] Plan generated:', plan.substring(0, 150) + '...');
 
     // ============================================
     // PHASE 2: DATA GATHERING (Tool Use)
     // ============================================
+    console.log('\\n========================================');
+    console.log('[PHASE 2: DATA GATHERING] Starting...');
+    console.log('========================================\\n');
     console.log('[Exercise Agent] Phase 2: Data Gathering');
     
     const gatheredData = {};
 
     // Get ICD-11 details for diagnosis (if specified)
     if (diagnosis) {
+      console.log('  --> Executing: search_diagnosis_codes for', diagnosis);
       gatheredData.diagnosisDetails = await this.executeTool('search_diagnosis_codes', {
         searchTerm: diagnosis
       });
+      console.log('  <-- Result:', Array.isArray(gatheredData.diagnosisDetails) ? `${gatheredData.diagnosisDetails.length} codes found` : 'no results');
     }
 
     // Get comprehensive research evidence
     if (diagnosis) {
+      console.log('  --> Executing: get_diagnosis_evidence_summary for', diagnosis);
       gatheredData.evidence = await this.executeTool('get_diagnosis_evidence_summary', {
         diagnosis: diagnosis
       });
+      console.log('  <-- Result:', gatheredData.evidence ? 'evidence retrieved' : 'no evidence');
     }
 
     // Get ROM reference data if ROM impairment mentioned
@@ -516,6 +543,14 @@ Format as a numbered list of action steps.`;
     // ============================================
     // PHASE 3: GENERATION (Synthesis)
     // ============================================
+    console.log('\\n========================================');
+    console.log('[PHASE 3: GENERATION] Starting...');
+    console.log('Data gathered from tools:');
+    Object.keys(gatheredData).forEach(key => {
+      const data = gatheredData[key];
+      console.log(`  - ${key}:`, Array.isArray(data) ? `${data.length} items` : typeof data);
+    });
+    console.log('========================================\\n');
     console.log('[Exercise Agent] Phase 3: Generation');
     
     const generationPrompt = `Using ALL the gathered information, create a comprehensive, evidence-based exercise program.
@@ -573,21 +608,33 @@ Return ONLY valid JSON in this exact format:
   ]
 }`;
 
-    const generationResponse = await this.openai.chat.completions.create({
+    console.log('[Phase 3] Sending to OpenAI...');
+    const generationResponse = await this.openai.responses.create({
       model: this.model,
-      messages: [
+      input: [
         { 
-          role: 'system', 
+          role: 'developer', 
           content: 'You are an expert physiotherapist creating evidence-based exercise prescriptions. Always ground recommendations in research evidence. Return only valid JSON.' 
         },
         { role: 'user', content: generationPrompt }
       ],
-      temperature: 0.7,
-      max_tokens: 2000,
-      response_format: { type: 'json_object' }
+      text: { verbosity: 'medium' }
     });
 
-    const generatedContent = generationResponse.choices[0].message.content;
+    // Extract text from response.output
+    let generatedContent = '';
+    for (const item of generationResponse.output) {
+      if (item.content) {
+        for (const content of item.content) {
+          if (content.text) {
+            generatedContent += content.text;
+          }
+        }
+      }
+    }
+    console.log('[Phase 3] Generated content received from OpenAI');
+    console.log('Content preview:', generatedContent.substring(0, 200) + '...');
+
     let initialProgram;
     
     try {
@@ -608,6 +655,11 @@ Return ONLY valid JSON in this exact format:
     // ============================================
     // PHASE 4: VALIDATION (Self-Review)
     // ============================================
+    console.log('\\n========================================');
+    console.log('[PHASE 4: VALIDATION] Starting...');
+    console.log('Validating generated program...');
+    console.log('Exercise count:', initialProgram.exercises?.length || 0);
+    console.log('========================================\\n');
     console.log('[Exercise Agent] Phase 4: Validation');
     
     const contraindications = gatheredData.diagnosisDetails?.[0]?.contraindications || 
@@ -641,26 +693,51 @@ Respond with JSON:
   "approved": boolean (true if program is ready to use)
 }`;
 
-    const validationResponse = await this.openai.chat.completions.create({
+    console.log('[Phase 4] Sending to OpenAI...');
+    const validationResponse = await this.openai.responses.create({
       model: this.model,
-      messages: [
+      input: [
         { 
-          role: 'system', 
+          role: 'developer', 
           content: 'You are a clinical safety reviewer ensuring exercise programs are safe, evidence-based, and appropriate. Be thorough and conservative.' 
         },
         { role: 'user', content: validationPrompt }
       ],
-      temperature: 0.2, // Very conservative for safety
-      max_tokens: 800,
-      response_format: { type: 'json_object' }
+      text: { verbosity: 'medium' }
     });
 
-    const validation = JSON.parse(validationResponse.choices[0].message.content);
-    console.log('[Exercise Agent] Validation result:', validation);
+    // Extract text from response.output
+    let validationContent = '';
+    for (const item of validationResponse.output) {
+      if (item.content) {
+        for (const content of item.content) {
+          if (content.text) {
+            validationContent += content.text;
+          }
+        }
+      }
+    }
+    console.log('[Phase 4] Validation received from OpenAI');
+    console.log('Validation preview:', validationContent.substring(0, 200) + '...');
+
+    const validation = JSON.parse(validationContent);
+    console.log('[Phase 4] Validation:', validation.approved ? 'APPROVED' : 'NEEDS WORK');
+    if (!validation.approved && validation.concerns) {
+      console.log('[Phase 4] Concerns found:', validation.concerns.length);
+    }
 
     // ============================================
     // PHASE 5: REFINEMENT (If Needed)
     // ============================================
+    console.log('\\n========================================');
+    if (!validation.approved || (validation.recommendations && validation.recommendations.length > 0)) {
+      console.log('[PHASE 5: REFINEMENT] Starting...');
+      console.log('Issues to address:', validation.recommendations?.length || 0);
+      console.log('========================================\\n');
+    } else {
+      console.log('[PHASE 5: REFINEMENT] Skipped - program approved');
+      console.log('========================================\\n');
+    }
     console.log('[Exercise Agent] Phase 5: Refinement');
     
     let finalProgram = initialProgram;
@@ -691,24 +768,40 @@ Create an improved exercise program that:
 
 Use the same JSON format as before.`;
 
-      const refinementResponse = await this.openai.chat.completions.create({
+      console.log('[Phase 5] Sending refinement to OpenAI...');
+      const refinementResponse = await this.openai.responses.create({
         model: this.model,
-        messages: [
-          { role: 'system', content: 'You are an expert physiotherapist refining exercise programs to address safety and quality concerns.' },
+        input: [
+          { role: 'developer', content: 'You are an expert physiotherapist refining exercise programs to address safety and quality concerns.' },
           { role: 'user', content: refinementPrompt }
         ],
-        temperature: 0.7,
-        max_tokens: 2000,
-        response_format: { type: 'json_object' }
+        text: { verbosity: 'medium' }
       });
 
-      finalProgram = JSON.parse(refinementResponse.choices[0].message.content);
-      console.log('[Exercise Agent] Refined program created');
+      // Extract text from response.output
+      let refinementContent = '';
+      for (const item of refinementResponse.output) {
+        if (item.content) {
+          for (const content of item.content) {
+            if (content.text) {
+              refinementContent += content.text;
+            }
+          }
+        }
+      }
+
+      finalProgram = JSON.parse(refinementContent);
+      console.log('[Phase 5] Refined program created');
+      console.log('[Phase 5] Final exercise count:', finalProgram.exercises?.length || 0);
     }
 
     // ============================================
     // RETURN COMPREHENSIVE RESULT
     // ============================================
+    console.log('\\n========================================');
+    console.log('[AI AGENT COMPLETE]');
+    console.log('Total exercises generated:', finalProgram.exercises?.length || 0);
+    console.log('========================================\\n');
     
     return {
       exercises: finalProgram.exercises || [],
