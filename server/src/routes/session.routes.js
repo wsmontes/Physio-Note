@@ -92,7 +92,9 @@ router.post('/', protect, async (req, res) => {
     res.status(201).json(session);
   } catch (error) {
     console.error('Error creating session:', error);
-    res.status(500).json({ error: { message: 'Error creating session' } });
+    console.error('Error stack:', error.stack);
+    console.error('Request body:', JSON.stringify(req.body, null, 2));
+    res.status(500).json({ error: { message: 'Error creating session', details: error.message } });
   }
 });
 
