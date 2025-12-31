@@ -48,6 +48,16 @@ export const suggestBillingCodes = async (sessionData) => {
   return response.data;
 };
 
+// Extract physiotherapy-specific data from transcription
+export const extractPhysiotherapyData = async (transcription) => {
+  const response = await axiosInstance.post('ai/extract-physio-data', {
+    transcription
+  }, {
+    timeout: 45000 // 45 seconds for data extraction
+  });
+  return response.data;
+};
+
 // Combined: transcribe and generate note
 export const transcribeAndGenerate = async (audioFile, context = {}, template = 'soap') => {
   const formData = new FormData();
@@ -69,5 +79,6 @@ export default {
   generateNote,
   generateExerciseProgram,
   suggestBillingCodes,
+  extractPhysiotherapyData,
   transcribeAndGenerate
 };

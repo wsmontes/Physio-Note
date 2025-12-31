@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { QueryProvider } from './lib/queryClient';
 import ErrorBoundary from './components/ErrorBoundary';
 import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar';
@@ -12,13 +13,15 @@ import PatientDetail from './pages/PatientDetail';
 import Sessions from './pages/Sessions';
 import SessionDetail from './pages/SessionDetail';
 import Notes from './pages/Notes';
+import Templates from './pages/Templates';
 
 function App() {
   return (
     <ErrorBoundary>
-      <ToastProvider>
-        <AuthProvider>
-          <Router>
+      <QueryProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <Router>
             <div className="min-h-screen bg-gray-50">
               <Navbar />
               <main className="container mx-auto px-4 py-8">
@@ -62,13 +65,20 @@ function App() {
                 </PrivateRoute>
               } />
               
+              <Route path="/templates" element={
+                <PrivateRoute>
+                  <Templates />
+                </PrivateRoute>
+              } />
+              
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </main>
         </div>
       </Router>
     </AuthProvider>
-      </ToastProvider>
+        </ToastProvider>
+      </QueryProvider>
     </ErrorBoundary>
   );
 }

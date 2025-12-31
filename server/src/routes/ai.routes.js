@@ -123,6 +123,30 @@ router.post('/billing-codes', protect, async (req, res) => {
   }
 });
 
+// @route   POST /api/ai/extract-physio-data
+// @desc    Extract physiotherapy-specific data from transcription
+// @access  Private
+router.post('/extract-physio-data', protect, async (req, res) => {
+  try {
+    const { transcription } = req.body;
+
+    if (!transcription) {
+      return res.status(400).json({ error: { message: 'Transcription text is required' } });
+    }
+
+    const physioData = await openaiService.extractPhysiotherapyData(transcription);
+
+    res.json({
+      physioData,
+      generatedBy: 'gpt-5-nano',
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error('Physio data extraction error:', error);
+    res.status(500).json({ error: { message: 'Failed to extract physiotherapy data', details: error.message } });
+  }
+});
+
 // @route   POST /api/ai/transcribe-and-generate
 // @desc    Combined endpoint: transcribe audio and generate note
 // @access  Private

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   FiSearch, FiFilter, FiFileText, FiUser, FiCalendar, 
   FiChevronDown, FiChevronUp, FiExternalLink 
@@ -8,8 +9,14 @@ import noteService from '../services/note.service';
 import patientService from '../services/patient.service';
 import sessionService from '../services/session.service';
 import { useToast } from '../context/ToastContext';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Badge } from '../components/ui/Badge';
+import { Skeleton } from '../components/ui/Skeleton';
 
 const Notes = () => {
+  const { t } = useTranslation();
   const toast = useToast();
   const [notes, setNotes] = useState([]);
   const [patients, setPatients] = useState([]);
@@ -90,8 +97,38 @@ const Notes = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-gray-600">Loading notes...</div>
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <Skeleton className="h-9 w-48 mb-2" />
+            <Skeleton className="h-5 w-32" />
+          </div>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                    <Skeleton className="h-5 w-32" />
+                  </div>
+                  <Skeleton className="h-6 w-64" />
+                  <Skeleton className="h-4 w-48" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
@@ -101,89 +138,103 @@ const Notes = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Clinical Notes</h1>
-          <p className="text-gray-600 mt-1">{filteredNotes.length} notes found</p>
+          <h1 className="text-3xl font-bold">{t('notes.title')}</h1>
+          <p className="text-gray-600 mt-1">
+            {filteredNotes.length} {t('notes.notesFound')}
+          </p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="card mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Search */}
-          <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search notes..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Search */}
+            <div className="relative">
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" />
+              <Input
+                type="text"
+                placeholder={t('notes.searchPlaceholder')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
 
-          {/* Type Filter */}
-          <div className="relative">
-            <FiFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
-            >
-              <option value="all">All Types</option>
-              <option value="soap">SOAP Notes</option>
-              <option value="progress">Progress Notes</option>
-              <option value="discharge">Discharge Notes</option>
-              <option value="initial">Initial Evaluation</option>
-            </select>
-          </div>
+            {/* Type Filter */}
+            <div className="relative">
+              <FiFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" />
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+              >
+                <option value="all">{t('notes.filters.allTypes')}</option>
+                <option value="soap">{t('notes.types.soap')}</option>
+                <option value="progress">{t('notes.types.progress')}</option>
+                <option value="discharge">{t('notes.types.discharge')}</option>
+                <option value="initial">{t('notes.types.initial')}</option>
+              </select>
+            </div>
 
-          {/* Patient Filter */}
-          <div className="relative">
-            <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <select
-              value={filterPatient}
-              onChange={(e) => setFilterPatient(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
-            >
-              <option value="all">All Patients</option>
-              {patients.map(patient => (
-                <option key={patient._id} value={patient._id}>
-                  {patient.firstName} {patient.lastName}
-                </option>
-              ))}
-            </select>
+            {/* Patient Filter */}
+            <div className="relative">
+              <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" />
+              <select
+                value={filterPatient}
+                onChange={(e) => setFilterPatient(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+              >
+                <option value="all">{t('notes.filters.allPatients')}</option>
+                {patients.map(patient => (
+                  <option key={patient._id} value={patient._id}>
+                    {patient.firstName} {patient.lastName}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Notes List */}
       {filteredNotes.length === 0 ? (
-        <div className="card text-center py-12">
-          <FiFileText className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">No notes found</h3>
-          <p className="text-gray-600">
-            {searchTerm || filterType !== 'all' || filterPatient !== 'all'
-              ? 'Try adjusting your filters'
-              : 'Start by creating a new session with documentation'}
-          </p>
-        </div>
+        <Card>
+          <CardContent className="text-center py-12">
+            <FiFileText className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">{t('notes.noNotes')}</h3>
+            <p className="text-gray-600">
+              {searchTerm || filterType !== 'all' || filterPatient !== 'all'
+                ? t('notes.tryAdjustFilters')
+                : t('notes.startCreating')}
+            </p>
+          </CardContent>
+        </Card>
       ) : (
         <div className="space-y-4">
           {filteredNotes.map((note) => {
             const isExpanded = expandedNotes.has(note._id);
             
             return (
-              <div key={note._id} className="card hover:shadow-lg transition-shadow">
-                {/* Note Header */}
-                <div 
-                  className="flex items-start justify-between cursor-pointer"
-                  onClick={() => toggleNoteExpansion(note._id)}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getNoteTypeColor(note.type)}`}>
-                        {note.type || 'Note'}
-                      </span>
+              <Card key={note._id} className="hover:shadow-lg transition-shadow">
+                <CardContent className="pt-6">
+                  {/* Note Header */}
+                  <div 
+                    className="flex items-start justify-between cursor-pointer"
+                    onClick={() => toggleNoteExpansion(note._id)}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Badge
+                          variant={
+                            note.type === 'soap' ? 'default' :
+                            note.type === 'progress' ? 'success' :
+                            note.type === 'discharge' ? 'secondary' :
+                            'warning'
+                          }
+                        >
+                          {note.type || t('notes.note')}
+                        </Badge>
                       <span className="text-sm text-gray-600 flex items-center gap-1">
                         <FiCalendar className="w-4 h-4" />
                         {new Date(note.createdAt).toLocaleDateString()}
@@ -296,7 +347,8 @@ const Notes = () => {
                     </div>
                   </div>
                 )}
-              </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>

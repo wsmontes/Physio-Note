@@ -315,9 +315,132 @@ function parseNoteContent(content, template) {
   };
 }
 
+/**
+ * Extract physiotherapy-specific data from transcription
+ * @param {string} transcription - Raw transcription text
+ * @returns {Promise<object>} Extracted physiotherapy data
+ */
+const extractPhysiotherapyData = async (transcription) => {
+  try {
+    const systemPrompt = `You are an AI assistant specialized in extracting physiotherapy-specific data from clinical transcriptions.
+
+Extract the following information from the transcription and return it in JSON format:
+1. Pain assessment (current, best, worst pain levels on 0-10 scale, location)
+2. Range of Motion measurements (joint, movement, degrees)
+3. Strength testing results (muscle/group, grade 0-5)
+4. Exercises mentioned or prescribed
+5. Modalities used (e.g., ultrasound, TENS, heat, ice)
+6. Billing codes mentioned or implied (CPT codes)
+
+Return ONLY valid JSON with this exact structure:
+{
+  "painScale": {
+    "current": number (0-10) or null,
+    "best": number (0-10) or null,
+    "worst": number (0-10) or null,
+    "location": string or null
+  },
+  "rangeOfMotion": [
+    {
+      "joint": string,
+      "movement": string,
+      "degrees": string
+    }
+  ],
+  "strengthTest": [
+    {
+      "muscle": string,
+      "grade": string
+    }
+  ],
+  "exercises": [
+    {
+      "name": string,
+      "sets": number or null,
+      "reps": number or null,
+      "duration": string or null,
+      "instructions": string or null
+    }
+  ],
+  "modalitiesUsed": [string],
+  "billingCodes": [
+    {
+      "code": string,
+      "description": string
+    }
+  ]
+}
+
+If information is not found, use empty arrays or null values. Be precise with numbers.`;
+
+    const response = await openai.responses.create({
+      model: process.env.OPENAI_MODEL || 'gpt-5-nano',
+      input: [
+        { role: 'developer', content: systemPrompt },
+        { role: 'user', content: `Extract physiotherapy data from this transcription:\n\n${transcription}` }
+      ],
+      text: {
+        verbosity: 'low'
+      }
+    });
+
+    // Extract text from response
+    let extractedText = '';
+    for (const item of response.output) {
+      if (item.content) {
+        for (const content of item.content) {
+          if (content.text) {
+            extractedText += content.text;
+          }
+        }
+      }
+    }
+
+    logDebug('Physio Data Extraction Response:', extractedText);
+
+    // Parse JSON from response
+    const jsonMatch = extractedText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.warn('No JSON found in extraction response');
+      return getEmptyPhysioData();
+    }
+
+    const physioData = JSON.parse(jsonMatch[0]);
+    
+    // Validate and clean data
+    return {
+      painScale: physioData.painScale || { current: null, best: null, worst: null, location: null },
+      rangeOfMotion: Array.isArray(physioData.rangeOfMotion) ? physioData.rangeOfMotion : [],
+      strengthTest: Array.isArray(physioData.strengthTest) ? physioData.strengthTest : [],
+      exercises: Array.isArray(physioData.exercises) ? physioData.exercises : [],
+      modalitiesUsed: Array.isArray(physioData.modalitiesUsed) ? physioData.modalitiesUsed : [],
+      billingCodes: Array.isArray(physioData.billingCodes) ? physioData.billingCodes : [],
+    };
+  } catch (error) {
+    console.error('Physio data extraction error:', error);
+    // Return empty structure instead of throwing
+    return getEmptyPhysioData();
+  }
+};
+
+/**
+ * Get empty physiotherapy data structure
+ */
+function getEmptyPhysioData() {
+  return {
+    painScale: { current: null, best: null, worst: null, location: null },
+    rangeOfMotion: [],
+    strengthTest: [],
+    exercises: [],
+    modalitiesUsed: [],
+    billingCodes: [],
+  };
+}
+
 module.exports = {
   transcribeAudio,
   generateSOAPNote,
   generateExercisePrescription,
-  suggestBillingCodes
+  suggestBillingCodes,
+  extractPhysiotherapyData
 };
