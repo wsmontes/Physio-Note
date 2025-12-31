@@ -56,6 +56,18 @@ const templateSchema = new mongoose.Schema({
   usageCount: {
     type: Number,
     default: 0
+  },
+  rating: {
+    average: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5
+    },
+    count: {
+      type: Number,
+      default: 0
+    }
   }
 }, {
   timestamps: true

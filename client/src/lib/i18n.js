@@ -295,10 +295,15 @@ const resources = {
       // Templates
       templates: {
         title: 'Templates',
+        template: 'template',
         newTemplate: 'New Template',
         editTemplate: 'Edit Template',
         myTemplates: 'My Templates',
         publicTemplates: 'Public Templates',
+        filters: {
+          allSpecialties: 'All Specialties',
+          publicOnly: 'Show public templates only'
+        },
         fields: {
           name: 'Template Name',
           description: 'Description',
@@ -685,10 +690,15 @@ const resources = {
       // Modelos
       templates: {
         title: 'Modelos',
+        template: 'modelo',
         newTemplate: 'Novo Modelo',
         editTemplate: 'Editar Modelo',
         myTemplates: 'Meus Modelos',
         publicTemplates: 'Modelos Públicos',
+        filters: {
+          allSpecialties: 'Todas as Especialidades',
+          publicOnly: 'Mostrar apenas modelos públicos'
+        },
         fields: {
           name: 'Nome do Modelo',
           description: 'Descrição',
