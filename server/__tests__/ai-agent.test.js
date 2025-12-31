@@ -209,4 +209,171 @@ describe('AI Agent Service', () => {
       ).rejects.toThrow('not yet implemented');
     });
   });
+
+  describe('Integration Tests - generateExercisesAgent', () => {
+    // Mock external dependencies
+    beforeAll(() => {
+      // Mock ICD API
+      jest.mock('../src/services/icd-api.service', () => ({
+        searchDiagnosis: jest.fn().mockResolvedValue({
+          matches: [{ code: 'M75.1', title: 'Rotator cuff syndrome' }]
+        }),
+        getDiagnosisDetails: jest.fn().mockResolvedValue({
+          code: 'M75.1',
+          title: 'Rotator cuff syndrome',
+          definition: 'Test definition'
+        })
+      }));
+
+      // Mock PubMed API
+      jest.mock('../src/services/pubmed-api.service', () => ({
+        searchArticles: jest.fn().mockResolvedValue({
+          articles: [{
+            pmid: '12345678',
+            title: 'Exercise for rotator cuff',
+            authors: ['Smith J'],
+            year: 2023
+          }]
+        })
+      }));
+
+      // Mock OpenAI
+      jest.mock('../src/services/openai.service', () => ({
+        generateCompletion: jest.fn().mockResolvedValue({
+          content: JSON.stringify({
+            plan: 'Test plan',
+            exercises: [{
+              name: 'Test Exercise',
+              sets: 3,
+              reps: 10
+            }]
+          })
+        })
+      }));
+    });
+
+    it('should execute complete 5-phase workflow', async () => {
+      const context = {
+        diagnosis: 'rotator cuff tear',
+        impairments: ['ROM deficit: 40%'],
+        goals: 'Return to tennis',
+        sessionData: { affectedJoint: 'shoulder' }
+      };
+
+      const result = await agent.generateExercisesAgent(context);
+
+      // Should have exercises array
+      expect(result).toHaveProperty('exercises');
+      expect(Array.isArray(result.exercises)).toBe(true);
+
+      // Should have metadata with evidence
+      expect(result).toHaveProperty('metadata');
+      expect(result.metadata).toHaveProperty('diagnosisCode');
+      expect(result.metadata).toHaveProperty('evidenceSources');
+      expect(result.metadata).toHaveProperty('validationStatus');
+      expect(result.metadata).toHaveProperty('agentPlan');
+      expect(result.metadata).toHaveProperty('dataGathered');
+      expect(result.metadata).toHaveProperty('phasesCompleted');
+    }, 120000); // 2 minute timeout for full workflow
+
+    it('should handle errors in data gathering gracefully', async () => {
+      // Mock ICD API failure
+      const icdService = require('../src/services/icd-api.service');
+      icdService.searchDiagnosis.mockRejectedValue(new Error('ICD API error'));
+
+      const context = {
+        diagnosis: 'test condition',
+        impairments: [],
+        goals: 'test'
+      };
+
+      // Should still complete but with fallback data
+      const result = await agent.generateExercisesAgent(context);
+
+      expect(result).toHaveProperty('exercises');
+      expect(result.metadata).toHaveProperty('dataGathered');
+      // Should note that some data gathering failed
+      expect(result.metadata.warnings).toBeDefined();
+    });
+  });
+
+  describe('Performance Tests', () => {
+    it('should complete exercise generation within 2 minutes', async () => {
+      const start = Date.now();
+
+      const context = {
+        diagnosis: 'shoulder pain',
+        impairments: ['ROM deficit'],
+        goals: 'Improve function'
+      };
+
+      await agent.generateExercisesAgent(context);
+
+      const duration = Date.now() - start;
+      expect(duration).toBeLessThan(120000); // 2 minutes
+    }, 130000);
+
+    it('should handle concurrent requests', async () => {
+      const requests = Array.from({ length: 3 }, (_, i) => ({
+        diagnosis: `condition ${i}`,
+        impairments: [],
+        goals: 'test'
+      }));
+
+      const results = await Promise.all(
+        requests.map(ctx => agent.generateExercisesAgent(ctx))
+      );
+
+      expect(results).toHaveLength(3);
+      results.forEach(result => {
+        expect(result).toHaveProperty('exercises');
+        expect(result).toHaveProperty('metadata');
+      });
+    }, 180000);
+  });
+
+  describe('Edge Cases', () => {
+    it('should handle minimal context', async () => {
+      const context = {
+        diagnosis: 'pain',
+        impairments: [],
+        goals: ''
+      };
+
+      const result = await agent.generateExercisesAgent(context);
+
+      expect(result).toHaveProperty('exercises');
+      // Should still generate something useful
+      expect(result.exercises.length).toBeGreaterThan(0);
+    });
+
+    it('should handle very detailed context', async () => {
+      const context = {
+        diagnosis: 'Complex regional pain syndrome affecting right shoulder with associated rotator cuff tear',
+        impairments: [
+          'ROM deficit: shoulder flexion 45%',
+          'ROM deficit: shoulder abduction 60%',
+          'Weakness: supraspinatus Grade 3/5',
+          'Weakness: infraspinatus Grade 3/5',
+          'Positive Hawkins-Kennedy test',
+          'Positive empty can test',
+          'Pain rating 7/10 at rest, 9/10 with movement'
+        ],
+        goals: 'Return to competitive tennis at collegiate level, improve overhead serving motion, reduce pain to 2/10 or less',
+        sessionData: {
+          affectedJoint: 'shoulder',
+          currentFunctionLevel: 'Moderate impairment',
+          priorTreatment: 'Previous PT 6 months ago with partial improvement'
+        }
+      };
+
+      const result = await agent.generateExercisesAgent(context);
+
+      expect(result.exercises.length).toBeGreaterThanOrEqual(5);
+      // Should generate progressions for complex cases
+      result.exercises.forEach(ex => {
+        expect(ex).toHaveProperty('progressions');
+      });
+    });
+  });
 });
