@@ -32,7 +32,11 @@ async function seedTemplates() {
     const existingCount = await Template.countDocuments({ isPublic: true });
     console.log(`📊 Found ${existingCount} existing public templates`);
 
-    if (existingCount >= preBuiltTemplates.length) {
+    // Clear existing public templates if forcing
+    if (process.argv.includes('--force')) {
+      const deleted = await Template.deleteMany({ isPublic: true });
+      console.log(`🗑️  Deleted ${deleted.deletedCount} existing public templates`);
+    } else if (existingCount >= preBuiltTemplates.length) {
       console.log('✅ Public templates already seeded. Use --force to re-seed.');
       process.exit(0);
     }
@@ -42,12 +46,6 @@ async function seedTemplates() {
       ...template,
       userId: systemUser._id
     }));
-
-    // Clear existing public templates if forcing
-    if (process.argv.includes('--force')) {
-      const deleted = await Template.deleteMany({ isPublic: true });
-      console.log(`🗑️  Deleted ${deleted.deletedCount} existing public templates`);
-    }
 
     // Insert templates
     const inserted = await Template.insertMany(templatesWithUser, { ordered: false });

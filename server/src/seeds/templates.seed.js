@@ -44,8 +44,6 @@ const preBuiltTemplates = [
         }
       ]
     },
-    rating: { average: 4.5, count: 127 },
-    usageCount: 856
   },
   
   {
@@ -95,8 +93,6 @@ const preBuiltTemplates = [
         }
       ]
     },
-    rating: { average: 4.8, count: 89 },
-    usageCount: 523
   },
 
   {
@@ -139,8 +135,6 @@ const preBuiltTemplates = [
         }
       ]
     },
-    rating: { average: 4.7, count: 64 },
-    usageCount: 412
   },
 
   {
@@ -190,8 +184,6 @@ const preBuiltTemplates = [
         }
       ]
     },
-    rating: { average: 4.6, count: 52 },
-    usageCount: 287
   },
 
   {
@@ -234,8 +226,6 @@ const preBuiltTemplates = [
         }
       ]
     },
-    rating: { average: 4.9, count: 71 },
-    usageCount: 394
   },
 
   {
@@ -278,8 +268,6 @@ const preBuiltTemplates = [
         }
       ]
     },
-    rating: { average: 4.7, count: 83 },
-    usageCount: 461
   },
 
   {
@@ -329,8 +317,6 @@ const preBuiltTemplates = [
         }
       ]
     },
-    rating: { average: 4.5, count: 48 },
-    usageCount: 276
   },
 
   {
@@ -373,8 +359,6 @@ const preBuiltTemplates = [
         }
       ]
     },
-    rating: { average: 4.8, count: 95 },
-    usageCount: 612
   },
 
   {
@@ -417,8 +401,6 @@ const preBuiltTemplates = [
         }
       ]
     },
-    rating: { average: 4.6, count: 67 },
-    usageCount: 381
   },
 
   {
@@ -461,8 +443,6 @@ const preBuiltTemplates = [
         }
       ]
     },
-    rating: { average: 4.9, count: 142 },
-    usageCount: 789
   },
 
   {
@@ -505,8 +485,6 @@ const preBuiltTemplates = [
         }
       ]
     },
-    rating: { average: 4.7, count: 78 },
-    usageCount: 445
   },
 
   {
@@ -556,8 +534,6 @@ const preBuiltTemplates = [
         }
       ]
     },
-    rating: { average: 4.8, count: 56 },
-    usageCount: 312
   },
 
   {
@@ -600,8 +576,6 @@ const preBuiltTemplates = [
         }
       ]
     },
-    rating: { average: 4.4, count: 203 },
-    usageCount: 1247
   },
 
   {
@@ -651,8 +625,6 @@ const preBuiltTemplates = [
         }
       ]
     },
-    rating: { average: 4.7, count: 114 },
-    usageCount: 673
   },
 
   {
@@ -695,8 +667,6 @@ const preBuiltTemplates = [
         }
       ]
     },
-    rating: { average: 4.3, count: 91 },
-    usageCount: 528
   }
 ];
 
