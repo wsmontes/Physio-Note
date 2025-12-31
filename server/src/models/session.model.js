@@ -37,11 +37,62 @@ const sessionSchema = new mongoose.Schema({
   },
   // Physiotherapy-specific assessments
   rangeOfMotion: [{
-    joint: String,
-    movement: String,
-    measurement: Number,
-    unit: { type: String, default: 'degrees' },
-    limitations: String
+    joint: {
+      type: String,
+      enum: ['shoulder', 'elbow', 'wrist', 'hip', 'knee', 'ankle', 'cervicalSpine', 'lumbarSpine', 'thoracicSpine']
+    },
+    side: {
+      type: String,
+      enum: ['left', 'right', 'bilateral']
+    },
+    movement: String, // specific to joint (flexion, extension, etc.)
+    measurement: {
+      type: Number,
+      min: 0,
+      max: 360
+    },
+    normalRange: Number, // reference value for comparison
+    painLevel: {
+      type: Number,
+      min: 0,
+      max: 10
+    },
+    notes: String
+  }],
+  muscleStrength: [{
+    muscleGroup: String, // e.g., 'shoulder flexors', 'knee extensors'
+    region: {
+      type: String,
+      enum: ['shoulder', 'elbow', 'wrist', 'hip', 'knee', 'ankle', 'neck', 'trunk']
+    },
+    side: {
+      type: String,
+      enum: ['left', 'right', 'bilateral']
+    },
+    grade: {
+      type: String,
+      enum: ['0', '1', '2-', '2', '2+', '3-', '3', '3+', '4-', '4', '4+', '5']
+    },
+    testPosition: {
+      type: String,
+      enum: ['supine', 'prone', 'sidelying', 'sitting', 'standing', 'gravityEliminated']
+    },
+    notes: String
+  }],
+  specialTests: [{
+    testId: String, // reference to special-tests.js library
+    testName: String,
+    bodyRegion: String,
+    side: {
+      type: String,
+      enum: ['left', 'right', 'bilateral']
+    },
+    result: {
+      type: String,
+      enum: ['positive', 'negative', 'inconclusive']
+    },
+    findings: String, // specific observations during test
+    clinicalRelevance: String // what this indicates
   }],
   strengthTest: [{
     muscle: String,
@@ -121,6 +172,34 @@ const sessionSchema = new mongoose.Schema({
   homeExerciseProgram: {
     type: String
   },
+  // Enhanced billing documentation
+  billing: {
+    diagnoses: [{
+      icd10Code: String,
+      description: String,
+      isPrimary: { type: Boolean, default: false },
+      onset: Date,
+      status: {
+        type: String,
+        enum: ['acute', 'chronic', 'resolving', 'stable']
+      }
+    }],
+    cptCodes: [{
+      code: String,
+      description: String,
+      minutes: Number, // actual time spent
+      units: Number, // billable units
+      modifiers: [String], // e.g., ['GP'], ['59']
+      notes: String
+    }],
+    totalMinutes: Number,
+    totalUnits: Number,
+    evaluationType: {
+      type: String,
+      enum: ['97161', '97162', '97163', '97164'] // low, mod, high complexity, re-eval
+    }
+  },
+  // Legacy billing codes field (keep for backward compatibility)
   billingCodes: [{
     code: String,
     description: String,

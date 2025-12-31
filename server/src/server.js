@@ -55,6 +55,7 @@ const sessionRoutes = require('./routes/session.routes');
 const noteRoutes = require('./routes/note.routes');
 const aiRoutes = require('./routes/ai.routes');
 const templateRoutes = require('./routes/template.routes');
+const referenceRoutes = require('./routes/reference.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
@@ -62,6 +63,7 @@ app.use('/api/sessions', sessionRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/templates', templateRoutes);
+app.use('/api/reference', referenceRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
