@@ -1,0 +1,287 @@
+Data Sources for a Physiotherapy Scribe Application
+
+A physiotherapy scribe application can leverage a wide range of publicly accessible, reliable, and compliant data sources. These include open APIs for clinical data, standard medical codes and terminologies, evidence-based guidelines, documentation frameworks, outcome measure repositories, and professional knowledge bases. Below, we organize key resources by type and describe how each can support physiotherapy documentation, guidance, or workflow.
+
+Public APIs for Clinical and Health Data
+
+Biomedical & Literature APIs (NCBI/NIH): The National Library of Medicine (NLM) provides free APIs (Entrez E-utilities) to query databases like PubMed and PubMed Central
+ncbi.nlm.nih.gov
+. This allows a scribe app to fetch biomedical literature (e.g. research on interventions or conditions) on the fly. PubMed contains over 39 million citations for biomedical literature
+pubmed.ncbi.nlm.nih.gov
+, and PubMed Central (PMC) offers a repository of 11.6 million+ free full-text articles
+pmc.ncbi.nlm.nih.gov
+pmc.ncbi.nlm.nih.gov
+. These APIs enable evidence retrieval (e.g. pulling relevant abstracts or guidelines to support clinical notes). The NLM’s Medical Subject Headings (MeSH) API can also help map lay terms to medical concepts for more accurate documentation.
+
+Clinical Terminology APIs (UMLS, SNOMED, ICD): The NLM’s Unified Medical Language System (UMLS) is an aggregator of many health vocabularies (ICD, SNOMED CT, CPT, LOINC, etc.) and provides an API for concept search and mapping
+nlm.nih.gov
+nlm.nih.gov
+. A scribe app can use this to normalize free-text into standard codes or synonyms. For example, using the UMLS API one could identify that “ACL tear” corresponds to a SNOMED CT concept and an ICD-10 code. The World Health Organization offers a REST API for ICD-11 for programmatic access to the latest disease classification
+icd.who.int
+. This API allows retrieval of ICD codes and descriptions (e.g. to automatically code diagnoses mentioned in a note). Many of these APIs are free with registration – UMLS is free to license (and covers SNOMED CT use in member countries like the US/Canada)
+nlm.nih.gov
+snomed.org
+, and WHO’s ICD-11 API is openly available with an API key
+icd.who.int
+.
+
+Exercise Library APIs: To assist with documenting or suggesting exercises, the app can tap into open exercise databases. For example, ExerciseDB is an open-source fitness exercise API with 1,300+ exercises (including muscle groups, instructions, and animated demos)
+rapidapi.com
+. Similarly, the API-Ninjas exercise API provides a list of 3,000 exercises by muscle group (useful for therapeutic exercise guidance). There are also open datasets of exercises – e.g. a public domain dataset of 800+ exercises with images is available on GitHub
+reddit.com
+. Such APIs enable the scribe to auto-suggest exercise descriptions or images when the physiotherapist prescribes specific exercises (e.g. fetching the description of a “clamshell exercise” for documentation or patient instructions).
+
+Evidence & Knowledge APIs: Beyond literature, specialized evidence databases like Epistemonikos (a large multilingual database of health systematic reviews) offer APIs. Epistemonikos contains over 100,000 systematic reviews and hundreds of thousands of studies
+epistemonikos.org
+ and provides an API for querying this evidence base
+epistemonikos.org
+. A scribe app could use this to quickly retrieve summaries of high-level evidence (e.g. “Find me any systematic review on exercise for chronic low back pain”). Likewise, the Physiotherapy Evidence Database (PEDro), while primarily a web portal, has structured data on trial quality ratings which could potentially be accessed or mirrored; PEDro indexes 67,000+ trials, reviews, and guidelines specific to physio interventions
+pedro.org.au
+.
+
+Medical Codes and Classification Systems
+
+Incorporating standard codes ensures the scribe’s output is interoperable and billing-compliant:
+
+ICD (International Classification of Diseases): ICD provides standard diagnosis codes. Physiotherapists often use ICD-10 or ICD-11 codes for patient diagnoses or health conditions (e.g. ICD-10 code M54.5 for low back pain). These codes are freely available internationally via WHO. ICD is a hierarchical tool for “recording, reporting and grouping conditions… diseases, disorders, injuries, external causes, anatomy, etc.”
+clinicaltables.nlm.nih.gov
+. An app can use ICD data to suggest appropriate codes as the therapist documents diagnoses. (For example, typing “rotator cuff tear” could prompt ICD-10 code S46.0). WHO’s ICD-11 is accessible via open API as noted, and ICD-10 code lists are publicly published by many countries.
+
+SNOMED CT (Systematized Nomenclature of Medicine – Clinical Terms): SNOMED CT is an extensive clinical terminology covering conditions, interventions, body structures, etc. It’s useful for more granular documentation than ICD. For instance, a physiotherapist’s observation like “anteromedial knee instability” may not have a unique ICD code but will have a SNOMED concept. SNOMED CT is free to use in many regions under national licenses; the U.S. NLM distributes SNOMED CT at no cost as part of UMLS
+snomed.org
+. A scribe application could leverage SNOMED CT to tag clinical note content with standardized concepts, which aids in interoperability (e.g. an EHR can interpret the SNOMED tags). Additionally, mappings exist (e.g. SNOMED to ICD)
+nlm.nih.gov
+ which the app could use to cross-link free-text to billing codes.
+
+CPT (Current Procedural Terminology) and HCPCS: In the U.S., CPT codes (maintained by the AMA) are used for billing therapy services (e.g. CPT 97110 for therapeutic exercises). While CPT is proprietary, understanding its codes is important for a scribe app that prepares billing-ready documentation. (Every user of CPT must be licensed by the AMA
+ama-assn.org
+, so the application would need to either license CPT or allow providers to input codes themselves.) Even though not open, we note CPT as a necessary resource for U.S. clinical use. For Canadian contexts, procedure codes may not be as standardized (some provinces/hospitals have their own), but HCPCS Level II codes (for supplies, etc.) and other billing code sets may be relevant. The application could maintain a reference list of common physiotherapy CPT codes to assist with billing documentation (flagging if certain billed procedures weren’t documented, for example).
+
+ICF (International Classification of Functioning, Disability and Health): The ICF, by WHO, is a classification that complements ICD by describing patients’ functional status, impairments, activity limitations, and participation restrictions
+who.int
+who.int
+. It’s highly relevant in physiotherapy to document outcomes and goals (e.g. an improvement in mobility or self-care ability). The ICF is open access; WHO provides an online browser and materials for it. A scribe app could use ICF categories to structure documentation of assessment findings or goals. For example, it might prompt the therapist with ICF domains (Body Functions/Structures, Activities/Participation, Environmental Factors) to ensure comprehensive documentation. Using ICF codes or terminology (like noting a code for “mobility of joint functions” impairment) can standardize how patient function is recorded across notes. ICF resources are freely published by WHO, and licensing follows the same open policy as ICD
+who.int
+.
+
+Other Standard Codes: Additional coding systems that might be integrated include LOINC (for standardized names of measurements or patient-reported outcome instruments), or ICHI (International Classification of Health Interventions, a newer WHO intervention classification) if available for physiotherapy procedures. These are all generally open/government-supported. Incorporating such standards helps a scribe ensure compliance and compatibility with EHRs and reporting systems.
+
+Clinical Guidelines and Care Pathways in Physiotherapy
+
+Physiotherapy practice is guided by numerous evidence-based clinical practice guidelines (CPGs) and standardized care pathways. A scribe application can embed knowledge of these to support clinical decision-making and documentation:
+
+International & National Guidelines: Resources like NICE Guidelines (UK) and AAP (APTA) Clinical Practice Guidelines provide high-quality recommendations for managing common conditions. For example, NICE’s guideline on low back pain (2016) recommends a package of exercise, education, and manual therapy (if needed) rather than routine imaging or passive modalities
+physio-pedia.com
+. Knowing this, a scribe app could prompt the clinician with guideline-aligned suggestions (e.g. “Consider documenting exercise plan, as guidelines advise exercise for this condition”). Many such guidelines are publicly accessible: NICE publishes full guidelines online, and many are summarized in open sources like Physiopedia
+physio-pedia.com
+. In the U.S., the APTA and its academies (e.g. Orthopaedic or Neurology sections) have CPGs (often published in journals like JOSPT) for conditions like ACL injury, stroke rehabilitation, etc. These can be accessed via journal websites or databases like PubMed. Globally, World Physiotherapy and national associations (e.g. Canadian Physiotherapy Association, Australian APA) also publish best-practice guidelines which are often open-access. A scribe tool could reference these to ensure the documentation covers recommended assessments or treatments.
+
+Care Pathways & Protocols: Standard post-operative or condition-specific rehab protocols are valuable data sources. For instance, orthopedic surgery rehab protocols (such as a rotator cuff repair rehab timeline or a total knee replacement exercise progression) are often shared by hospitals or clinics online. Some healthcare institutions publish rehabilitation protocols for patient education – e.g., an orthopedic clinic’s website might list phase-by-phase exercise guides for common surgeries
+accesssportsmed.com
+accesssportsmed.com
+. These protocols (usually free PDF or web pages) can inform the scribe app’s suggestions for expected interventions at a given post-op stage. For example, if documenting a patient 6 weeks after ACL reconstruction, the app might prompt, “Check range of motion – protocol expects full extension by 6 weeks
+accesssportsmed.com
+.”
+
+In Canada, initiatives like Ontario’s Quality-Based Procedures (QBPs) have defined care pathways for certain conditions (e.g. rehab after hip & knee replacements) with best practices tied to funding
+ontario.ca
+. These documents (published by Health Quality Ontario) outline what assessments and treatments should occur at each stage of care. A scribe application incorporating such pathway data can remind clinicians of milestones (e.g. “QBP recommends outcome measure X at discharge for TKA patients”).
+
+Knowledge Bases of Exercises and Techniques: Another form of guideline is a technique or exercise library describing how to perform interventions. Websites like Physiopedia and PhysioTools (some require subscription) or open sites like PhysiotherapyExercises.com provide libraries of exercises and manual techniques. PhysiotherapyExercises.com, for instance, is a free database of 1500+ exercises with over 5000 illustrations, created for clinicians to generate patient booklets
+physiotherapyexercises.com
+. A scribe app could use such a library to auto-populate exercise details in the note (ensuring consistency and completeness of exercise description) or to provide patient instruction handouts. Since this particular site is open, the app could pull exercise images or text (with appropriate credit) to include in documentation or patient reports.
+
+Clinical Pathways for Specific Populations: There are also standardized care frameworks like pulmonary rehab protocols, stroke rehab pathways, or pediatric developmental checklists which are often published by professional bodies or health authorities (e.g. American Heart Association’s stroke rehab guidelines, UK’s NHS pathways for cardiac rehab). These often are freely available (e.g. via NIH or professional society websites). Incorporating these ensures the scribe covers relevant points (e.g. “In stroke rehab, document bed mobility training – see pathway step 2”).
+
+By integrating guideline and pathway data, the scribe application can both assist documentation (prompting the user to record guideline-recommended elements) and ensure quality (flagging if something recommended is missing, or providing quick reference to the clinician within the app).
+
+Documentation Frameworks and Assessment Templates
+
+Physiotherapists typically document using well-established formats and standardized assessment tools. A scribe app should align with these documentation patterns:
+
+SOAP Note Structure: The SOAP format (Subjective, Objective, Assessment, Plan) is widely used across healthcare for daily notes
+ncbi.nlm.nih.gov
+. It provides a logical, organized way to record patient encounters. A physiotherapy scribe app can use SOAP sections as its backbone – e.g. guiding the therapist to enter Subjective (patient-reported status), Objective (measures and observations), Assessment (clinical impression and changes), and Plan (treatment plan or next steps). Because SOAP is so prevalent and recognized as a “cognitive framework for clinical reasoning”
+ncbi.nlm.nih.gov
+, using it ensures the generated notes are familiar and easily readable. The app might have separate input fields or prompts for each section, improving completeness. For example, under Objective, it could prompt for vital signs, ROM, strength grades, special test outcomes, etc., while under Assessment it could encourage documenting the patient’s functional progress or remaining limitations. Using the SOAP structure also helps fulfill regulatory requirements for documenting each aspect of care.
+
+ICF-based Documentation: In addition to SOAP, many physiotherapists use the ICF model to structure assessments (especially for initial evaluations or disability assessments). An application could incorporate ICF templates – for instance, listing categories under Body Functions/Structures (e.g. pain, muscle power), Activities/Participation (e.g. walking, self-care tasks), and Environmental Factors to ensure the clinician notes relevant items in each domain. World Physiotherapy (formerly WCPT) promotes using ICF in practice and provides documentation guidelines emphasizing capturing all aspects of patient health
+who.int
+who.int
+. By integrating an ICF checklist (the WHO provides an online ICF checklist and core sets
+who.int
+), the scribe can help generate a holistic note or even produce an ICF summary chart as part of documentation.
+
+Standardized Evaluation Forms: Many settings have templates for initial evaluations, daily notes, and discharge summaries. For example, a Subjective interview template might include sections for history of present condition, past medical history, medications, etc., while an Objective exam template might list common tests (palpation, ROM, special tests, etc.). Some of these templates are published in textbooks or shared by clinics online. Additionally, regulatory bodies often outline minimum documentation content. For instance, the College of Physiotherapists of Ontario’s documentation standards expect that records “are confidential, accurate, complete, and reflect the physiotherapy services provided”
+collegept.org
+. The scribe app can enforce such completeness by ensuring each note has patient identifiers, date, therapist signature, etc., and that every treatment provided has a corresponding note entry (meeting legal standards).
+
+The APTA documentation guidelines (available via APTA or archived PDFs) detail what should be included in initial exams, visit notes, and discharge notes
+apta.org
+apta.org
+. A scribe application can reference these guidelines as a blueprint. For example, upon completing an initial evaluation note, the app might prompt the clinician if they haven’t documented a prognosis or a plan of care – elements expected per guidelines
+apta.org
+. Similarly, World Physiotherapy’s documentation guideline (2011) emphasizes recording the entire patient management process from initial exam to discharge, including all interventions and patient responses
+world.physio
+world.physio
+. Ensuring the app’s workflow follows these frameworks helps maintain consistent and defensible records.
+
+Outcome Measure and Assessment Tool Integration: During assessments, PTs frequently use validated questionnaires and performance tests. Templates for these (sometimes called flowsheets or outcome measure forms) are valuable data. A scribe app could have built-in forms or links for common Outcome Measures – for example, a numeric pain rating scale, Oswestry Disability Index (for low back pain), DASH (Disabilities of Arm, Shoulder, Hand), Berg Balance Scale, 6-Minute Walk Test, etc. Many of these instruments are open or have minimal restrictions for clinical use. The app could auto-score them if the therapist inputs the raw responses. Repositories like the Rehabilitation Measures Database (RMD) provide detailed info and even PDFs for over 580 measures used in rehab
+sralab.org
+. RMD is freely accessible and considered a go-to resource with instrument descriptions, reliability/validity, and instructions
+sralab.org
+. For instance, if a therapist wants to include the Berg Balance Scale, the scribe app could fetch the RMD info to remind of the 14 items and their scoring, or even allow input of item scores and calculate the total. This streamlines documentation of standardized tests and ensures the data (scores, percentiles) are recorded correctly. Some outcome measures are also available via LOINC codes, which the app could use to label the results in a structured way.
+
+Electronic Forms and FHIR Integration: If the scribe app interfaces with Electronic Health Records, using standards like HL7 FHIR for notes or observations would be ideal. FHIR has resources for clinical notes and also for survey instruments (so a PT note could be captured in a structured FHIR Document format, and outcome measures could be represented as QuestionnaireResponses). There are open-source libraries and profiles for these, which although not content sources per se, provide a data structure that the scribe could populate with the above content.
+
+In summary, drawing from established documentation frameworks (SOAP, ICF) and providing templates for common assessment elements will make the scribe tool fit naturally into the physiotherapist’s workflow while improving thoroughness and consistency of the records.
+
+Outcome Measures and Functional Assessment Data
+
+Outcome measures are central in physiotherapy for tracking patient progress and justifying treatment effectiveness. Publicly accessible repositories and standardized instruments include:
+
+Rehabilitation Measures Database (RMD): This is a free, online database of over 550 measurement instruments used in rehabilitation
+sralab.org
+. It is maintained by researchers and clinicians (e.g. at Shirley Ryan AbilityLab) with support from government grants
+sralab.org
+. For each outcome measure, RMD provides a summary, the population it’s used for, how to administer and score it, and references. The scribe app can utilize RMD as a built-in reference – e.g., if a therapist plans to use the Timed Up and Go (TUG) test, the app can show its description and normative values. RMD even offers patient-friendly infographics for many measures (like the Oswestry, Berg, 6MWT) to help patients understand their scores
+sralab.org
+sralab.org
+. The app could embed these infographics when printing a report for a patient. Because RMD is open-access (no login required, and explicitly a free service
+sralab.org
+), it’s a compliant resource to integrate.
+
+Standard Clinical Outcome Tools: Many commonly used tools are open or have public-domain status. For example, the Oswestry Disability Index and Berg Balance Scale are freely available (and listed on RMD). The NIH’s PROMIS (Patient-Reported Outcomes Measurement Information System) questionnaires are another open resource – PROMIS offers validated question banks (e.g. Physical Function, Pain Interference) that can be used without cost, especially via their computer adaptive testing system. A scribe app could incorporate PROMIS short forms for therapists to easily administer and record patient-reported outcomes digitally. Additionally, generic health surveys like SF-36 or condition-specific ones like the Knee Injury and Osteoarthritis Outcome Score (KOOS) have scoring manuals available publicly. The app can store these and automate the calculations.
+
+ICF Core Sets: The WHO and research collaborations have developed “ICF Core Sets” for various conditions (e.g. low back pain core set, stroke core set) which list the most relevant ICF categories to assess. These are available on the WHO or project websites
+who.int
+. They effectively serve as standardized outcome domains. The scribe app can use core sets as checklists to ensure key functional outcomes are noted – for example, the Low Back Pain ICF core set might remind the therapist to document pain intensity, spinal mobility, work participation, etc. Because these core sets are published with the aim of broad use, there’s no restriction in referencing them.
+
+Performance and Lab Data: Though physiotherapists less frequently deal with lab tests, some measures like blood pressure, gait speed, etc., may be documented. If needed, LOINC codes provide an open standard for labs and clinical measurements. For instance, if recording a 6-minute walk distance, LOINC has a code for that test result. The application could use such coding to label the data (improving interoperability). LOINC is freely accessible and downloadable from loinc.org.
+
+By leveraging these outcome measure resources, a physiotherapy scribe application not only helps in documenting scores but also fosters an outcome-oriented practice — it can prompt clinicians at appropriate intervals to re-test a measure and track changes over time, pulling in normative data from open sources to contextualize the results.
+
+Evidence and Research Repositories
+
+To keep documentation and decision support up-to-date, the application should interface with reputable clinical research sources:
+
+Physiotherapy Evidence Database (PEDro): PEDro is a specialized bibliographic database for physio, indexing randomized trials, systematic reviews, and clinical guidelines relevant to physical therapy
+pedro.org.au
+. It’s free to use and can quickly provide evidence summaries (each trial in PEDro is rated for quality on the PEDro scale). For a scribe, PEDro could be tapped when a therapist is formulating a treatment plan – e.g., the app could offer, “According to PEDro, there are 10 high-quality trials supporting exercise for this condition
+pedro.org.au
+.” While PEDro doesn’t have an openly documented API, its data (titles/abstracts and quality scores) can be searched via their website or possibly via an open-access link. The scribe might direct the user to PEDro when they want to find evidence-based treatment options.
+
+PubMed and MEDLINE: As mentioned, PubMed is an unparalleled resource for medical literature. The scribe app can allow quick literature searches (via the PubMed API) using keywords or even automatically generated queries based on the documented diagnosis. For example, if the patient’s condition is “frozen shoulder (adhesive capsulitis)”, the app could fetch the latest Cochrane review or randomized trial references on that topic. Since PubMed is government-run and open, linking out to abstracts or PubMed IDs is compliant. If users have access to full texts (through institutional subscriptions or Open Access), the app could also integrate with tools like OpenAthens or library link resolvers, but by itself the app should focus on open content. Notably, many clinical practice guidelines and systematic reviews are Open Access (often found via PubMed Central or publisher sites), so the app could retrieve full-text guidance when needed (e.g., retrieving a NICE guideline summary from PubMed Central
+iasp-pain.org
+ if available).
+
+Cochrane Library & Systematic Reviews: The Cochrane Library provides high-quality systematic reviews; while recent ones may be paywalled, summaries are usually free. The app can utilize Cochrane summaries for quick evidence insights (e.g. “Cochrane review (2018) found moderate evidence that manual therapy plus exercise is effective for neck pain”). Additionally, Epistemonikos, as noted earlier, aggregates systematic reviews from Cochrane and beyond in multiple languages
+epistemonikos.org
+, and is Creative Commons licensed. The scribe could pull in evidence matrices or plain-language summaries from Epistemonikos to enrich documentation or patient education sections.
+
+Open Access Journals and Repositories: The Directory of Open Access Journals (DOAJ) is a global index of peer-reviewed open journals, now listing over 21,000 journals and 11 million articles across disciplines (including many in rehabilitation and sports medicine)
+en.wikipedia.org
+. The scribe app can be configured to search within DOAJ for full-text articles (so clinicians can access research without paywalls). For example, Journal of Physiotherapy (Australia) and Archives of Physiotherapy are in DOAJ as fully open-access journals. The app could maintain a curated list of relevant open journals for physiotherapy and pull articles from them for on-demand reading. Another repository is PubMed Central (PMC), as mentioned, which contains many NIH-funded papers and international journal content – the scribe can source any related free full-text (like a pivotal trial) from PMC directly to attach or summarize in the documentation.
+
+Clinical Trial Registries: While more for research use, resources like ClinicalTrials.gov (also an open database/API) could be used if the app aims to show ongoing trial data or to check if a patient might fit a trial criterion (less directly applicable to typical scribing, but an available data source nonetheless).
+
+By integrating these evidence sources, the scribe application not only documents what was done, but can support why it was done by providing on-the-spot evidence. This can be useful for clinician decision support and even for generating patient education snippets (“According to a 2024 study, this exercise improves knee strength by 30%...”).
+
+Professional and Educational Resources for Practitioners
+
+Physiotherapists frequently reference educational content and consensus knowledge in practice. A scribe application can embed or link to such resources to enhance clinical documentation and provide guidance:
+
+Physiopedia: Often dubbed “Wikipedia for rehabilitation,” Physiopedia is a free, comprehensive reference written by physiotherapy professionals worldwide
+physio-pedia.com
+. It contains thousands of pages on conditions, assessments, and interventions. Because it’s under open licenses and meant for sharing knowledge, a scribe app can safely use Physiopedia content to inform documentation. For instance, if a clinician is treating “tennis elbow”, the app could show key points from Physiopedia on lateral epicondylitis (common findings, recommended treatments) to ensure nothing is missed. It could even help auto-fill some background info in the assessment (though direct copying into notes should be done judiciously and cited if needed). Physiopedia also often lists clinical guidelines and protocols on a topic page
+physio-pedia.com
+, giving the user a one-stop summary. Embedding Physiopedia’s insights can save time and improve the quality of notes (e.g., including typical patient education points or documenting contraindications that are noted in the resource).
+
+Medical Libraries and Gov Resources: Websites like MedlinePlus (by NLM) provide patient-friendly summaries of conditions and treatments. These are open access and can be used to generate patient education materials as part of the documentation (e.g., after a session, giving the patient a printout “About Your Back Pain” sourced from MedlinePlus or similar). Additionally, governmental resources like NIH Rehabilitation Information or CDC rehab guidelines (for example, the CDC’s info on fall prevention exercises) are reliable and public domain. Including these in an app’s library means the clinician can quickly pull up educational snippets or verify public health recommendations.
+
+Allied Health Repositories: Sometimes relevant information may come from related fields like occupational therapy or sports science. For example, OTseeker is an open database similar to PEDro but for occupational therapy evidence. There’s also SPORTDiscus for sports medicine literature (though not fully open). However, many universities maintain open guides (LibGuides) listing key resources for evidence-based physical therapy
+guides.lib.unc.edu
+ – these guides themselves can point to open databases and outcome tools, effectively serving as a directory that the app could present to the user.
+
+Clinical Textbooks or Open Courses: While many textbooks are paid, there are some open educational resources. For instance, OpenPhysio (not to be confused with Physiopedia) is an open-access journal focused on physiotherapy education and practice. And Physiopedia Plus offers some free online courses. The app could potentially integrate snippets or checklists from such courses (for example, a concussion management checklist from a freely available course).
+
+Regulatory and Ethical Guidelines: Though not “data” in the same sense, including references to things like the Code of Ethics or Standards of Practice can be useful for compliance. World Physiotherapy and many national bodies publish these openly. A scribe app might use them to enforce certain documentation (e.g., informed consent documentation, confidentiality statements) in the record. For example, World Physiotherapy’s policy and guideline documents (available on their website
+world.physio
+) outline expectations like obtaining consent – the app could have a required field or prompt for “document patient consent for treatment,” aligning with such standards.
+
+By incorporating these professional resources, the scribe application becomes not just a documentation tool but a knowledge assistant for the physiotherapist. All suggested sources above are either government-supported, non-profit, or open-community driven, which makes them suitable for use in a compliant healthcare application without legal hurdles.
+
+In conclusion, a physiotherapy scribe app can greatly enhance its functionality by leveraging open and reliable data sources across clinical terminology, coding, guidelines, documentation standards, outcome measures, and knowledge bases. Using these resources ensures that the app’s suggestions and outputs are evidence-based, standardized, and aligned with best practices in physiotherapy. By organizing and integrating this wealth of information – from ICD codes to exercise libraries to academic evidence – the scribe can assist clinicians in creating high-quality clinical documentation efficiently while also supporting clinical decision-making and patient education.
+
+Sources:
+
+NLM Unified Medical Language System (UMLS) – integrates ICD, SNOMED CT, CPT, etc.
+nlm.nih.gov
+nlm.nih.gov
+
+WHO ICD-11 API – provides REST access to ICD codes (open with registration)
+icd.who.int
+
+SNOMED CT via NLM – free distribution as part of UMLS for member countries
+snomed.org
+
+API Ninjas Exercise API – 3000+ exercises (muscle group categorized)
+api-ninjas.com
+; Free exercise dataset (800+ exercises with images)
+reddit.com
+
+PhysiotherapyExercises.com – free database with 1500+ exercises & thousands of images
+physiotherapyexercises.com
+
+NICE Guideline (Low Back Pain) summary – recommends exercise, education, etc.
+physio-pedia.com
+
+Access Sports Medicine – example rehab protocol guides (shoulder arthroscopy, knee meniscectomy)
+accesssportsmed.com
+
+Physiopedia – “Wikipedia for rehabilitation,” free online reference
+physio-pedia.com
+
+StatPearls (SOAP Notes) – SOAP note is widely used, structured way of documentation
+ncbi.nlm.nih.gov
+
+APTA Documentation Guidelines – outlines required elements for PT documentation (initial exam, visit, discharge)
+apta.org
+
+World Physiotherapy documentation guideline – emphasizes complete record of care from exam to discharge
+world.physio
+world.physio
+
+Rehabilitation Measures Database (RMD) – 580+ outcome measures, open access “go-to resource” for rehab outcomes
+sralab.org
+
+RMD Infographic Info – RMD gets ~5 million views/year; NIDILRR-funded; provides patient-friendly infographics for measures
+sralab.org
+sralab.org
+
+PubMed – 39+ million biomedical citations, free search API
+pubmed.ncbi.nlm.nih.gov
+
+PubMed Central – 11.6 million free full-text articles in NIH archive
+pmc.ncbi.nlm.nih.gov
+pmc.ncbi.nlm.nih.gov
+
+PEDro – free PT evidence database, 67k+ trials/reviews/guidelines with quality ratings
+pedro.org.au
+pedro.org.au
+
+Epistemonikos – open evidence database with 100k+ systematic reviews, API available
+epistemonikos.org
+epistemonikos.org
+
+DOAJ – index of 21k+ open access journals, including many PT journals
+en.wikipedia.org
+
+AMA CPT Licensing FAQ – CPT code use requires AMA license (not open)
+ama-assn.org
+
+WHO ICF Overview – ICF framework to classify functioning/disability (endorsed worldwide for standard language)
+who.int
+
+NLM Clinical Table API (ICD-11) – ICD defined as tool for recording conditions, broad categories
+clinicaltables.nlm.nih.gov
