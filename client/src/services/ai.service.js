@@ -38,6 +38,65 @@ export const generateExerciseProgram = async (sessionData, patientGoals) => {
   return response.data;
 };
 
+// ============================================
+// AGENTIC AI - Evidence-Based Generation
+// ============================================
+
+/**
+ * Agent-based exercise generation with evidence integration
+ * Uses multi-step workflow: planning, data gathering, generation, validation, refinement
+ * 
+ * @param {object} context - Exercise generation context
+ * @param {string} context.patientId - Patient MongoDB ID
+ * @param {string} context.diagnosis - Primary diagnosis
+ * @param {array} context.impairments - List of impairments (e.g., ["ROM deficit", "weakness"])
+ * @param {string} context.goals - Patient goals
+ * @param {object} context.sessionData - Current session data
+ * @returns {Promise<object>} Exercise program with evidence sources and metadata
+ */
+export const generateExerciseProgramAgent = async (context) => {
+  const response = await axiosInstance.post('ai/agent/generate-exercises', context, {
+    timeout: 120000 // 2 minutes for full agentic workflow
+  });
+  return response.data;
+};
+
+/**
+ * Agent-based SOAP note with diagnosis verification (Coming in Phase 2)
+ * 
+ * @param {object} context - SOAP note context
+ * @param {string} context.transcription - Session transcription
+ * @param {string} context.patientId - Patient MongoDB ID
+ * @param {string} context.templateType - Template type (soap, progress, discharge)
+ * @returns {Promise<object>} SOAP note with verified diagnoses and evidence
+ */
+export const generateSOAPNoteAgent = async (context) => {
+  const response = await axiosInstance.post('ai/agent/soap-note', context, {
+    timeout: 120000 // 2 minutes
+  });
+  return response.data;
+};
+
+/**
+ *generateExerciseProgramAgent,
+  generateSOAPNoteAgent,
+  getClinicalRecommendation,
+   Clinical decision support with evidence (Coming in Phase 4)
+ * 
+ * @param {object} context - Clinical question context
+ * @param {string} context.diagnosis - Patient diagnosis
+ * @param {object} context.symptoms - Current symptoms
+ * @param {object} context.testResults - Test results so far
+ * @param {string} context.questionType - Question (e.g., "What special tests should I perform?")
+ * @returns {Promise<object>} Evidence-based recommendation
+ */
+export const getClinicalRecommendation = async (context) => {
+  const response = await axiosInstance.post('ai/agent/clinical-decision', context, {
+    timeout: 90000 // 90 seconds
+  });
+  return response.data;
+};
+
 // Suggest billing codes
 export const suggestBillingCodes = async (sessionData) => {
   const response = await axiosInstance.post('ai/billing-codes', {

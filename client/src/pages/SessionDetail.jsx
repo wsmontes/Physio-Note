@@ -8,7 +8,7 @@ import patientService from '../services/patient.service';
 import aiService from '../services/ai.service';
 import { useToast } from '../context/ToastContext';
 import { useTemplates } from '../hooks';
-import { ROMInput, MMTInput, SpecialTestsInput } from '../components/clinical';
+import { ROMInput, MMTInput, SpecialTestsInput, EvidencePanel } from '../components/clinical';
 import { CPTCodeSelector, EightMinuteRuleCalculator, ICD10Search } from '../components/billing';
 
 const SessionDetail = () => {
@@ -47,6 +47,9 @@ const SessionDetail = () => {
   const [diagnoses, setDiagnoses] = useState([]);
   const [cptCodes, setCptCodes] = useState([]);
   const [totalMinutes, setTotalMinutes] = useState(0);
+  
+  // AI Agent metadata (Phase 1)
+  const [exerciseMetadata, setExerciseMetadata] = useState(null);
 
   useEffect(() => {
     // Don't try to fetch if this is a new session
@@ -169,15 +172,31 @@ const SessionDetail = () => {
     }
   };
 
-  const handleGenerateExercises = async () => {
-    try {
-      setAiLoading(true);
+  cons
+      // Prepare context for AI agent
       const context = {
-        diagnosis: session?.diagnosis || assessment,
-        currentExercises: exercises,
-        patientAge: patient?.dateOfBirth ? new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear() : null
+        patientId: session?.patient,
+        diagnosis: diagnoses.find(d => d.isPrimary)?.description || session?.chiefComplaint || assessment,
+        impairments: [
+          ...rangeOfMotion.map(rom => `${rom.joint} ROM deficit: ${rom.deficit}%`),
+          ...muscleStrength.filter(mmt => mmt.grade < 4).map(mmt => `${mmt.muscle} weakness: Grade ${mmt.grade}`),
+          ...specialTests.filter(test => test.result === 'positive').map(test => `Positive ${test.name}`)
+        ],
+        goals: plan || 'Improve function and reduce pain',
+        sessionData: {
+          affectedJoint: rangeOfMotion[0]?.joint,
+          currentFunctionLevel: assessment
+        }
       };
       
+      // Use agent-based generation with evidence
+      const result = await aiService.generateExerciseProgramAgent(context);
+      
+      // Set exercises and metadata
+      setExercises(result.exercises || []);
+      setExerciseMetadata(result.metadata);
+      
+      toast.success(`Exercise program generated with ${result.metadata?.evidenceSources?.length || 0} evidence sources!`
       const exerciseProgram = await aiService.generateExerciseProgram(context);
       setExercises(exerciseProgram.exercises || []);
       toast.success('Exercise program generated!');
@@ -544,6 +563,11 @@ const SessionDetail = () => {
             />
           </div>
         ))}
+        
+        {/* Evidence Panel - Show research sources for AI-generated exercises */}
+        {exerciseMetadata && exerciseMetadata.evidenceSources && exerciseMetadata.evidenceSources.length > 0 && (
+          <EvidencePanel metadata={exerciseMetadata} />
+        )}
       </div>
 
       {/* Modalities Used */}

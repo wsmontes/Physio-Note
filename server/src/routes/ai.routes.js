@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const { protect } = require('../middleware/auth.middleware');
 const openaiService = require('../services/openai.service');
+const { getAgent } = require('../services/ai-agent.service');
 
 // Configure multer for audio file uploads
 const storage = multer.memoryStorage();
@@ -184,6 +185,144 @@ router.post('/transcribe-and-generate', protect, upload.single('audio'), async (
   } catch (error) {
     console.error('Combined transcription and generation error:', error);
     res.status(500).json({ error: { message: 'Failed to process audio', details: error.message } });
+  }
+});
+
+// ============================================
+// AGENTIC AI ENDPOINTS
+// Multi-step workflows with evidence integration
+// ============================================
+
+// @route   POST /api/ai/agent/generate-exercises
+// @desc    Agent-based exercise generation with evidence and validation
+// @access  Private
+router.post('/agent/generate-exercises', protect, async (req, res) => {
+  try {
+    const { patientId, diagnosis, impairments, goals, sessionData } = req.body;
+
+    if (!diagnosis && !impairments) {
+      return res.status(400).json({ 
+        error: { message: 'Either diagnosis or impairments must be provided' } 
+      });
+    }
+
+    const agent = getAgent();
+    const result = await agent.execute('generate_exercises', {
+      patientId,
+      diagnosis,
+      impairments: impairments || [],
+      goals: goals || 'Improve function and reduce pain',
+      sessionData: sessionData || {}
+    });
+
+    res.json({
+      ...result,
+      generatedBy: 'ai-agent (gpt-5-nano)',
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error('Exercise agent error:', error);
+    res.status(500).json({ 
+      error: { 
+        message: 'Failed to generate exercise program', 
+        details: error.message 
+      } 
+    });
+  }
+});
+
+// @route   POST /api/ai/agent/soap-note
+// @desc    Agent-based SOAP note with diagnosis verification
+// @access  Private
+router.post('/agent/soap-note', protect, async (req, res) => {
+  try {
+    const { transcription, patientId, templateType } = req.body;
+
+    if (!transcription) {
+      return res.status(400).json({ 
+        error: { message: 'Transcription text is required' } 
+      });
+    }
+
+    const agent = getAgent();
+    const result = await agent.execute('generate_soap_note', {
+      transcription,
+      patientId,
+      templateType: templateType || 'soap'
+    });
+
+    res.json({
+      ...result,
+      generatedBy: 'ai-agent (gpt-5-nano)',
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error('SOAP agent error:', error);
+    
+    // Check if this is a "not yet implemented" error
+    if (error.message.includes('not yet implemented')) {
+      return res.status(501).json({ 
+        error: { 
+          message: 'SOAP Note Agent coming in Phase 2',
+          details: 'Use /api/ai/generate-note for now' 
+        } 
+      });
+    }
+    
+    res.status(500).json({ 
+      error: { 
+        message: 'Failed to generate SOAP note', 
+        details: error.message 
+      } 
+    });
+  }
+});
+
+// @route   POST /api/ai/agent/clinical-decision
+// @desc    Real-time clinical decision support with evidence
+// @access  Private
+router.post('/agent/clinical-decision', protect, async (req, res) => {
+  try {
+    const { diagnosis, symptoms, testResults, questionType } = req.body;
+
+    if (!diagnosis || !questionType) {
+      return res.status(400).json({ 
+        error: { message: 'Diagnosis and questionType are required' } 
+      });
+    }
+
+    const agent = getAgent();
+    const result = await agent.execute('clinical_decision_support', {
+      diagnosis,
+      symptoms: symptoms || {},
+      testResults: testResults || {},
+      questionType
+    });
+
+    res.json({
+      ...result,
+      generatedBy: 'ai-agent (gpt-5-nano)',
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error('Clinical decision agent error:', error);
+    
+    // Check if this is a "not yet implemented" error
+    if (error.message.includes('not yet implemented')) {
+      return res.status(501).json({ 
+        error: { 
+          message: 'Clinical Decision Support Agent coming in Phase 4',
+          details: 'Feature in development' 
+        } 
+      });
+    }
+    
+    res.status(500).json({ 
+      error: { 
+        message: 'Failed to provide clinical recommendation', 
+        details: error.message 
+      } 
+    });
   }
 });
 
