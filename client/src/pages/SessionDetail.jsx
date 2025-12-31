@@ -8,6 +8,8 @@ import patientService from '../services/patient.service';
 import aiService from '../services/ai.service';
 import { useToast } from '../context/ToastContext';
 import { useTemplates } from '../hooks';
+import { ROMInput, MMTInput, SpecialTestsInput } from '../components/clinical';
+import { CPTCodeSelector, EightMinuteRuleCalculator, ICD10Search } from '../components/billing';
 
 const SessionDetail = () => {
   const { id } = useParams();
@@ -38,6 +40,13 @@ const SessionDetail = () => {
   const [modalitiesUsed, setModalitiesUsed] = useState([]);
   const [billingCodes, setBillingCodes] = useState([]);
   const [audioTranscription, setAudioTranscription] = useState('');
+  
+  // New clinical measurement fields (Sprint 4)
+  const [muscleStrength, setMuscleStrength] = useState([]);
+  const [specialTests, setSpecialTests] = useState([]);
+  const [diagnoses, setDiagnoses] = useState([]);
+  const [cptCodes, setCptCodes] = useState([]);
+  const [totalMinutes, setTotalMinutes] = useState(0);
 
   useEffect(() => {
     // Don't try to fetch if this is a new session
@@ -77,6 +86,13 @@ const SessionDetail = () => {
       setExercises(sessionData.exercises || []);
       setModalitiesUsed(sessionData.modalitiesUsed || []);
       setBillingCodes(sessionData.billingCodes || []);
+      
+      // New clinical measurement fields
+      setMuscleStrength(sessionData.muscleStrength || []);
+      setSpecialTests(sessionData.specialTests || []);
+      setDiagnoses(sessionData.billing?.diagnoses || []);
+      setCptCodes(sessionData.billing?.cptCodes || []);
+      setTotalMinutes(sessionData.billing?.totalMinutes || 0);
       
       // Handle audioTranscription - it might be an object or string
       const transcription = sessionData.audioTranscription;
@@ -210,6 +226,16 @@ const SessionDetail = () => {
         modalitiesUsed,
         billingCodes,
         audioTranscription: typeof audioTranscription === 'string' ? audioTranscription : String(audioTranscription || ''),
+        // New clinical measurement fields
+        muscleStrength,
+        specialTests,
+        billing: {
+          diagnoses,
+          cptCodes,
+          totalMinutes,
+          totalUnits: cptCodes.reduce((sum, code) => sum + (code.units || 0), 0),
+          evaluationType: cptCodes.find(c => c.category === 'evaluation')?.code || null
+        },
         status: 'completed'
       };
 
@@ -421,105 +447,22 @@ const SessionDetail = () => {
         </div>
       </div>
 
-      {/* Range of Motion */}
-      <div className="card mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">{t('sessionDetail.rangeOfMotion')}</h2>
-          <button onClick={addROMEntry} className="btn-secondary">
-            {t('sessionDetail.addROMTest')}
-          </button>
+      {/* Clinical Measurements Section */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-4 text-gray-800">Clinical Measurements</h2>
+        <div className="space-y-6">
+          {/* Range of Motion - New Component */}
+          <ROMInput values={rangeOfMotion} onChange={setRangeOfMotion} />
+          
+          {/* Manual Muscle Testing - New Component */}
+          <MMTInput values={muscleStrength} onChange={setMuscleStrength} />
+          
+          {/* Special Tests - New Component */}
+          <SpecialTestsInput values={specialTests} onChange={setSpecialTests} />
         </div>
-        {rangeOfMotion.map((rom, index) => (
-          <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
-            <input
-              type="text"
-              placeholder={t('sessionDetail.placeholders.joint')}
-              value={rom.joint}
-              onChange={(e) => {
-                const updated = [...rangeOfMotion];
-                updated[index].joint = e.target.value;
-                setRangeOfMotion(updated);
-              }}
-              className="p-2 border border-gray-300 rounded-lg"
-            />
-            <input
-              type="text"
-              placeholder={t('sessionDetail.placeholders.movement')}
-              value={rom.movement}
-              onChange={(e) => {
-                const updated = [...rangeOfMotion];
-                updated[index].movement = e.target.value;
-                setRangeOfMotion(updated);
-              }}
-              className="p-2 border border-gray-300 rounded-lg"
-            />
-            <input
-              type="text"
-              placeholder={t('sessionDetail.placeholders.measurement')}
-              value={rom.measurement}
-              onChange={(e) => {
-                const updated = [...rangeOfMotion];
-                updated[index].measurement = e.target.value;
-                setRangeOfMotion(updated);
-              }}
-              className="p-2 border border-gray-300 rounded-lg"
-            />
-          </div>
-        ))}
       </div>
 
-      {/* Strength Testing */}
-      <div className="card mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">{t('sessionDetail.strengthTesting')}</h2>
-          <button onClick={addStrengthEntry} className="btn-secondary">
-            {t('sessionDetail.addStrengthTest')}
-          </button>
-        </div>
-        {strengthTest.map((test, index) => (
-          <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
-            <input
-              type="text"
-              placeholder={t('sessionDetail.placeholders.muscleGroup')}
-              value={test.muscle}
-              onChange={(e) => {
-                const updated = [...strengthTest];
-                updated[index].muscle = e.target.value;
-                setStrengthTest(updated);
-              }}
-              className="p-2 border border-gray-300 rounded-lg"
-            />
-            <select
-              value={test.grade}
-              onChange={(e) => {
-                const updated = [...strengthTest];
-                updated[index].grade = e.target.value;
-                setStrengthTest(updated);
-              }}
-              className="p-2 border border-gray-300 rounded-lg"
-            >
-              <option value="">{t('sessionDetail.selectGrade')}</option>
-              <option value="5/5">{t('sessionDetail.strengthGrades.normal')}</option>
-              <option value="4/5">{t('sessionDetail.strengthGrades.good')}</option>
-              <option value="3/5">{t('sessionDetail.strengthGrades.fair')}</option>
-              <option value="2/5">{t('sessionDetail.strengthGrades.poor')}</option>
-              <option value="1/5">{t('sessionDetail.strengthGrades.trace')}</option>
-              <option value="0/5">{t('sessionDetail.strengthGrades.zero')}</option>
-            </select>
-            <input
-              type="text"
-              placeholder={t('sessionDetail.placeholders.notes')}
-              value={test.notes}
-              onChange={(e) => {
-                const updated = [...strengthTest];
-                updated[index].notes = e.target.value;
-                setStrengthTest(updated);
-              }}
-              className="p-2 border border-gray-300 rounded-lg"
-            />
-          </div>
-        ))}
-      </div>
+
 
       {/* Exercise Prescription */}
       <div className="card mb-6">
@@ -636,36 +579,26 @@ const SessionDetail = () => {
         </div>
       </div>
 
-      {/* Billing Codes */}
-      <div className="card mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">{t('sessionDetail.billingCodes')}</h2>
-          <button
-            onClick={handleSuggestBillingCodes}
-            disabled={aiLoading}
-            className="btn-secondary"
-          >
-            {t('sessionDetail.aiSuggestCodes')}
-          </button>
+      {/* Billing & Documentation Section */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-4 text-gray-800">Billing & Documentation</h2>
+        <div className="space-y-6">
+          {/* ICD-10 Diagnoses - New Component */}
+          <ICD10Search values={diagnoses} onChange={setDiagnoses} />
+          
+          {/* CPT Codes & Time Tracking - New Component */}
+          <CPTCodeSelector 
+            values={cptCodes} 
+            onChange={setCptCodes}
+            onTimeUpdate={setTotalMinutes}
+          />
+          
+          {/* 8-Minute Rule Calculator - New Component */}
+          <EightMinuteRuleCalculator 
+            totalMinutes={totalMinutes}
+            claimedUnits={cptCodes.reduce((sum, code) => sum + (code.units || 0), 0)}
+          />
         </div>
-        <div className="flex flex-wrap gap-2">
-          {billingCodes.map((code, index) => (
-            <div key={index} className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full font-medium">
-              {code}
-            </div>
-          ))}
-        </div>
-        <input
-          type="text"
-          placeholder={t('sessionDetail.addBillingCode')}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter' && e.target.value.trim()) {
-              setBillingCodes([...billingCodes, e.target.value.trim()]);
-              e.target.value = '';
-            }
-          }}
-          className="w-full p-2 border border-gray-300 rounded-lg mt-3"
-        />
       </div>
 
       {/* Save Button Footer */}
