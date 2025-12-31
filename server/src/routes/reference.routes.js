@@ -3,7 +3,7 @@ const router = express.Router();
 const auth = require('../middleware/auth.middleware');
 
 // Import reference data libraries
-const romReference = require('../data/rom-reference');
+const { romReference, getJoints } = require('../data/rom-reference');
 const mmtReference = require('../data/mmt-reference');
 const specialTests = require('../data/special-tests');
 const cptCodes = require('../data/cpt-codes');
@@ -17,8 +17,8 @@ const icd10Codes = require('../data/icd10-codes');
 router.get('/rom', auth, (req, res) => {
   try {
     res.json({
-      joints: romReference.getJoints(),
-      reference: romReference.romReference
+      joints: getJoints(),
+      reference: romReference
     });
   } catch (error) {
     console.error('Error fetching ROM reference:', error);

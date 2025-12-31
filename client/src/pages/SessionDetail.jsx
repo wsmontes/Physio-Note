@@ -172,7 +172,10 @@ const SessionDetail = () => {
     }
   };
 
-  cons
+  const handleGenerateExercises = async () => {
+    try {
+      setAiLoading(true);
+      
       // Prepare context for AI agent
       const context = {
         patientId: session?.patient,
@@ -196,10 +199,7 @@ const SessionDetail = () => {
       setExercises(result.exercises || []);
       setExerciseMetadata(result.metadata);
       
-      toast.success(`Exercise program generated with ${result.metadata?.evidenceSources?.length || 0} evidence sources!`
-      const exerciseProgram = await aiService.generateExerciseProgram(context);
-      setExercises(exerciseProgram.exercises || []);
-      toast.success('Exercise program generated!');
+      toast.success(`Exercise program generated with ${result.metadata?.evidenceSources?.length || 0} evidence sources!`);
     } catch (error) {
       console.error('Error generating exercises:', error);
       toast.error(error.userMessage || 'Failed to generate exercises');
