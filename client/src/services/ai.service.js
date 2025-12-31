@@ -52,13 +52,27 @@ export const generateExerciseProgram = async (sessionData, patientGoals) => {
  * @param {array} context.impairments - List of impairments (e.g., ["ROM deficit", "weakness"])
  * @param {string} context.goals - Patient goals
  * @param {object} context.sessionData - Current session data
- * @returns {Promise<object>} Exercise program with evidence sources and metadata
+ * @returns {Promise<object>} Returns {sessionId, promise} where promise resolves to exercise program
  */
 export const generateExerciseProgramAgent = async (context) => {
+  // Start the agent generation (returns immediately with sessionId)
   const response = await axiosInstance.post('ai/agent/generate-exercises', context, {
-    timeout: 120000 // 2 minutes for full agentic workflow
+    timeout: 5000 // 5 seconds for initial response
   });
-  return response.data;
+  
+  const { sessionId } = response.data;
+  
+  // Return sessionId and a promise that will resolve when the agent completes
+  // The UI will track progress via Server-Sent Events
+  return {
+    sessionId,
+    promise: new Promise((resolve, reject) => {
+      // This promise will be resolved by the AIProgressModal when it receives the 'complete' event
+      // For now, just setup the structure - the modal will handle the actual resolution
+      window._agentPromises = window._agentPromises || {};
+      window._agentPromises[sessionId] = { resolve, reject };
+    })
+  };
 };
 
 /**

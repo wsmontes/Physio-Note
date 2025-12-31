@@ -156,11 +156,16 @@ class PhysioAIAgent {
    * 
    * @param {string} task - Task type: 'generate_exercises', 'generate_soap_note', 'clinical_decision_support', 'suggest_billing'
    * @param {object} context - Task-specific context data
+   * @param {function} context.progressCallback - Optional callback for progress events
    * @returns {Promise<object>} Task result with metadata
    */
   async execute(task, context) {
     console.log(`[AI Agent] Starting task: ${task}`);
     console.log(`[AI Agent] Context:`, JSON.stringify(context, null, 2));
+
+    // Extract progress callback if provided
+    const progressCallback = context.progressCallback;
+    delete context.progressCallback; // Remove from context to avoid passing to OpenAI
 
     const taskHandlers = {
       'generate_exercises': this.generateExercisesAgent.bind(this),
@@ -176,7 +181,8 @@ class PhysioAIAgent {
 
     const startTime = Date.now();
     try {
-      const result = await handler(context);
+      // Pass progress callback to handler
+      const result = await handler({ ...context, progressCallback });
       const duration = Date.now() - startTime;
       
       console.log(`[AI Agent] Task completed in ${duration}ms`);
@@ -421,10 +427,21 @@ class PhysioAIAgent {
       diagnosis,
       impairments = [],
       goals = '',
-      sessionData = {}
+      sessionData = {},
+      progressCallback
     } = context;
 
     console.log('[Exercise Agent] Starting 5-phase workflow');
+    
+    // Emit phase start if callback provided
+    if (progressCallback) {
+      progressCallback({
+        type: 'phase',
+        phase: 'planning',
+        status: 'started',
+        message: 'Starting planning phase - analyzing clinical context'
+      });
+    }
 
     // ============================================
     // PHASE 1: PLANNING (Deep Reasoning)
@@ -489,6 +506,22 @@ Format as a numbered list of action steps.`;
     console.log('Plan preview:', plan.substring(0, 200) + '...');
     
     console.log('[Phase 1] Plan generated:', plan.substring(0, 150) + '...');
+    
+    // Emit AI response
+    if (progressCallback) {
+      progressCallback({
+        type: 'ai_response',
+        message: 'AI planning complete',
+        content: plan.substring(0, 500)
+      });
+      
+      progressCallback({
+        type: 'phase',
+        phase: 'planning',
+        status: 'complete',
+        message: 'Planning phase completed'
+      });
+    }
 
     // ============================================
     // PHASE 2: DATA GATHERING (Tool Use)
@@ -497,25 +530,75 @@ Format as a numbered list of action steps.`;
     console.log('[PHASE 2: DATA GATHERING] Starting...');
     console.log('========================================\\n');
     console.log('[Exercise Agent] Phase 2: Data Gathering');
-    
-    const gatheredData = {};
+        // Emit phase start
+    if (progressCallback) {
+      progressCallback({
+        type: 'phase',
+        phase: 'data_gathering',
+        status: 'started',
+        message: 'Gathering clinical data from ICD-11, PubMed, and reference databases'
+      });
+    }
+        const gatheredData = {};
 
     // Get ICD-11 details for diagnosis (if specified)
     if (diagnosis) {
       console.log('  --> Executing: search_diagnosis_codes for', diagnosis);
+      
+      if (progressCallback) {
+        progressCallback({
+          type: 'tool_call',
+          message: 'Searching ICD-11 for diagnosis codes',
+          tool: { name: 'search_diagnosis_codes', parameters: { searchTerm: diagnosis } }
+        });
+      }
+      
       gatheredData.diagnosisDetails = await this.executeTool('search_diagnosis_codes', {
         searchTerm: diagnosis
       });
       console.log('  <-- Result:', Array.isArray(gatheredData.diagnosisDetails) ? `${gatheredData.diagnosisDetails.length} codes found` : 'no results');
+      
+      if (progressCallback) {
+        progressCallback({
+          type: 'tool_call',
+          message: 'ICD-11 search complete',
+          tool: {
+            name: 'search_diagnosis_codes',
+            result: `Found ${gatheredData.diagnosisDetails?.length || 0} diagnosis codes`
+          }
+        });
+      }
     }
 
     // Get comprehensive research evidence
     if (diagnosis) {
       console.log('  --> Executing: get_diagnosis_evidence_summary for', diagnosis);
+      
+      if (progressCallback) {
+        progressCallback({
+          type: 'tool_call',
+          message: 'Searching PubMed for research evidence',
+          tool: { name: 'get_diagnosis_evidence_summary', parameters: { diagnosis } }
+        });
+      }
       gatheredData.evidence = await this.executeTool('get_diagnosis_evidence_summary', {
         diagnosis: diagnosis
       });
       console.log('  <-- Result:', gatheredData.evidence ? 'evidence retrieved' : 'no evidence');
+      
+      if (progressCallback) {
+        const evidenceCount = (gatheredData.evidence?.systematicReviews?.length || 0) +
+                              (gatheredData.evidence?.randomizedTrials?.length || 0) +
+                              (gatheredData.evidence?.guidelines?.length || 0);
+        progressCallback({
+          type: 'tool_call',
+          message: 'PubMed search complete',
+          tool: {
+            name: 'get_diagnosis_evidence_summary',
+            result: `Found ${evidenceCount} evidence sources`
+          }
+        });
+      }
     }
 
     // Get ROM reference data if ROM impairment mentioned
@@ -539,10 +622,27 @@ Format as a numbered list of action steps.`;
     }
 
     console.log('[Exercise Agent] Data gathered:', Object.keys(gatheredData));
+    
+    if (progressCallback) {
+      progressCallback({
+        type: 'phase',
+        phase: 'data_gathering',
+        status: 'complete',
+        message: `Data gathering complete - collected ${Object.keys(gatheredData).length} data sources`
+      });
+    }
 
     // ============================================
     // PHASE 3: GENERATION (Synthesis)
     // ============================================
+    if (progressCallback) {
+      progressCallback({
+        type: 'phase',
+        phase: 'generation',
+        message: 'Phase 3: Synthesizing evidence-based exercise program'
+      });
+    }
+    
     console.log('\\n========================================');
     console.log('[PHASE 3: GENERATION] Starting...');
     console.log('Data gathered from tools:');
@@ -634,6 +734,14 @@ Return ONLY valid JSON in this exact format:
     }
     console.log('[Phase 3] Generated content received from OpenAI');
     console.log('Content preview:', generatedContent.substring(0, 200) + '...');
+    
+    if (progressCallback) {
+      progressCallback({
+        type: 'ai_response',
+        message: 'AI generated exercise program',
+        content: generatedContent.substring(0, 300)
+      });
+    }
 
     let initialProgram;
     
@@ -651,10 +759,27 @@ Return ONLY valid JSON in this exact format:
     }
 
     console.log('[Exercise Agent] Generated program:', initialProgram);
+    
+    if (progressCallback) {
+      progressCallback({
+        type: 'phase',
+        phase: 'generation',
+        message: `Phase 3 complete: Generated ${initialProgram.exercises?.length || 0} exercises`,
+        complete: true
+      });
+    }
 
     // ============================================
     // PHASE 4: VALIDATION (Self-Review)
     // ============================================
+    if (progressCallback) {
+      progressCallback({
+        type: 'phase',
+        phase: 'validation',
+        message: 'Phase 4: Reviewing program for safety and quality'
+      });
+    }
+    
     console.log('\\n========================================');
     console.log('[PHASE 4: VALIDATION] Starting...');
     console.log('Validating generated program...');
@@ -719,11 +844,28 @@ Respond with JSON:
     }
     console.log('[Phase 4] Validation received from OpenAI');
     console.log('Validation preview:', validationContent.substring(0, 200) + '...');
+    
+    if (progressCallback) {
+      progressCallback({
+        type: 'ai_response',
+        message: 'AI validation review complete',
+        content: validationContent.substring(0, 300)
+      });
+    }
 
     const validation = JSON.parse(validationContent);
     console.log('[Phase 4] Validation:', validation.approved ? 'APPROVED' : 'NEEDS WORK');
     if (!validation.approved && validation.concerns) {
       console.log('[Phase 4] Concerns found:', validation.concerns.length);
+    }
+    
+    if (progressCallback) {
+      progressCallback({
+        type: 'phase',
+        phase: 'validation',
+        message: validation.approved ? 'Phase 4 complete: Program approved' : `Phase 4 complete: ${validation.concerns?.length || 0} concerns identified`,
+        complete: true
+      });
     }
 
     // ============================================
@@ -734,9 +876,26 @@ Respond with JSON:
       console.log('[PHASE 5: REFINEMENT] Starting...');
       console.log('Issues to address:', validation.recommendations?.length || 0);
       console.log('========================================\\n');
+      
+      if (progressCallback) {
+        progressCallback({
+          type: 'phase',
+          phase: 'refinement',
+          message: `Phase 5: Refining program to address ${validation.concerns?.length || 0} concerns`
+        });
+      }
     } else {
       console.log('[PHASE 5: REFINEMENT] Skipped - program approved');
       console.log('========================================\\n');
+      
+      if (progressCallback) {
+        progressCallback({
+          type: 'phase',
+          phase: 'refinement',
+          message: 'Phase 5: Skipped - program approved',
+          complete: true
+        });
+      }
     }
     console.log('[Exercise Agent] Phase 5: Refinement');
     
@@ -793,6 +952,23 @@ Use the same JSON format as before.`;
       finalProgram = JSON.parse(refinementContent);
       console.log('[Phase 5] Refined program created');
       console.log('[Phase 5] Final exercise count:', finalProgram.exercises?.length || 0);
+      
+      if (progressCallback) {
+        progressCallback({
+          type: 'ai_response',
+          message: 'AI refinement complete',
+          content: refinementContent.substring(0, 300)
+        });
+      }
+      
+      if (progressCallback) {
+        progressCallback({
+          type: 'phase',
+          phase: 'refinement',
+          message: `Phase 5 complete: Program refined with ${finalProgram.exercises?.length || 0} exercises`,
+          complete: true
+        });
+      }
     }
 
     // ============================================
@@ -803,7 +979,7 @@ Use the same JSON format as before.`;
     console.log('Total exercises generated:', finalProgram.exercises?.length || 0);
     console.log('========================================\\n');
     
-    return {
+    const result = {
       exercises: finalProgram.exercises || [],
       metadata: {
         evidenceSources: this.extractEvidenceSources(gatheredData.evidence),
@@ -817,6 +993,20 @@ Use the same JSON format as before.`;
         generatedAt: new Date()
       }
     };
+    
+    if (progressCallback) {
+      progressCallback({
+        type: 'complete',
+        message: 'Exercise program generation complete',
+        result: {
+          exerciseCount: result.exercises.length,
+          evidenceSourceCount: result.metadata.evidenceSources.length,
+          phasesCompleted: result.metadata.phasesCompleted
+        }
+      });
+    }
+    
+    return result;
   }
 
   /**

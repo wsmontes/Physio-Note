@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FiSave, FiArrowLeft, FiClock, FiUser, FiActivity } from 'react-icons/fi';
 import VoiceRecorder from '../components/VoiceRecorder';
+import AIProgressModal from '../components/AIProgressModal';
+import { useAIProgress } from '../hooks/useAIProgress';
 import sessionService from '../services/session.service';
 import patientService from '../services/patient.service';
 import aiService from '../services/ai.service';
@@ -21,6 +23,9 @@ const SessionDetail = () => {
   const [session, setSession] = useState(null);
   const [patient, setPatient] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
+  
+  // AI Progress Modal
+  const { isOpen, sessionId, startProgress, closeProgress } = useAIProgress();
 
   // Template selection
   const { data: templates = [], isLoading: templatesLoading } = useTemplates();
@@ -192,14 +197,26 @@ const SessionDetail = () => {
         }
       };
       
-      // Use agent-based generation with evidence
+      // Use agent-based generation with evidence and progress tracking
       const result = await aiService.generateExerciseProgramAgent(context);
       
-      // Set exercises and metadata
-      setExercises(result.exercises || []);
-      setExerciseMetadata(result.metadata);
-      
-      toast.success(`Exercise program generated with ${result.metadata?.evidenceSources?.length || 0} evidence sources!`);
+      // Open progress modal with the sessionId
+      if (result.sessionId) {
+        startProgress(result.sessionId);
+        
+        // Wait for completion and then set exercises
+        // (The modal will close automatically when complete event is received)
+        result.promise.then((finalResult) => {
+          setExercises(finalResult.exercises || []);
+          setExerciseMetadata(finalResult.metadata);
+          toast.success(`Exercise program generated with ${finalResult.metadata?.evidenceSources?.length || 0} evidence sources!`);
+        });
+      } else {
+        // Fallback for old API response (shouldn't happen with new implementation)
+        setExercises(result.exercises || []);
+        setExerciseMetadata(result.metadata);
+        toast.success(`Exercise program generated with ${result.metadata?.evidenceSources?.length || 0} evidence sources!`);
+      }
     } catch (error) {
       console.error('Error generating exercises:', error);
       toast.error(error.userMessage || 'Failed to generate exercises');
@@ -644,6 +661,13 @@ const SessionDetail = () => {
           </button>
         </div>
       </div>
+      
+      {/* AI Progress Modal */}
+      <AIProgressModal
+        isOpen={isOpen}
+        sessionId={sessionId}
+        onClose={closeProgress}
+      />
     </div>
   );
 };

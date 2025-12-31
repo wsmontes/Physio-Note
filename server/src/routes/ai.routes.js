@@ -4,6 +4,7 @@ const multer = require('multer');
 const { protect } = require('../middleware/auth.middleware');
 const openaiService = require('../services/openai.service');
 const { getAgent } = require('../services/ai-agent.service');
+const progressStream = require('../services/progress-stream.service');
 
 // Configure multer for audio file uploads
 const storage = multer.memoryStorage();
@@ -193,6 +194,14 @@ router.post('/transcribe-and-generate', protect, upload.single('audio'), async (
 // Multi-step workflows with evidence integration
 // ============================================
 
+// @route   GET /api/ai/agent/progress/:sessionId
+// @desc    Server-Sent Events stream for AI Agent progress
+// @access  Private
+router.get('/agent/progress/:sessionId', protect, (req, res) => {
+  const { sessionId } = req.params;
+  progressStream.registerStream(sessionId, res, req);
+});
+
 // @route   POST /api/ai/agent/generate-exercises
 // @desc    Agent-based exercise generation with evidence and validation
 // @access  Private
@@ -206,25 +215,56 @@ router.post('/agent/generate-exercises', protect, async (req, res) => {
       });
     }
 
-    const agent = getAgent();
-    const result = await agent.execute('generate_exercises', {
-      patientId,
-      diagnosis,
-      impairments: impairments || [],
-      goals: goals || 'Improve function and reduce pain',
-      sessionData: sessionData || {}
+    // Generate unique session ID for progress tracking
+    const sessionId = `exercise-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+
+    // Send session ID immediately so client can connect to SSE
+    res.json({
+      sessionId,
+      status: 'processing',
+      message: 'Exercise generation started. Connect to /api/ai/agent/progress/:sessionId for real-time updates.'
     });
 
-    res.json({
-      ...result,
-      generatedBy: 'ai-agent (gpt-5-nano)',
-      timestamp: new Date()
+    // Execute agent asynchronously with progress tracking
+    setImmediate(async () => {
+      try {
+        progressStream.emit(sessionId, {
+          type: 'start',
+          message: 'AI Agent starting exercise generation workflow'
+        });
+
+        const agent = getAgent();
+        const result = await agent.execute('generate_exercises', {
+          patientId,
+          diagnosis,
+          impairments: impairments || [],
+          goals: goals || 'Improve function and reduce pain',
+          sessionData: sessionData || {},
+          progressCallback: (event) => {
+            progressStream.emit(sessionId, event);
+          }
+        });
+
+        // Emit completion event
+        progressStream.emitComplete(sessionId, {
+          exerciseCount: result.exercises?.length || 0,
+          evidenceCount: result.metadata?.evidenceSources?.length || 0,
+          duration: result.metadata?.totalDuration || 0
+        });
+
+        // Close stream after a delay to ensure client receives completion
+        setTimeout(() => progressStream.closeStream(sessionId), 2000);
+      } catch (error) {
+        console.error('Exercise agent error:', error);
+        progressStream.emitError(sessionId, error);
+        setTimeout(() => progressStream.closeStream(sessionId), 2000);
+      }
     });
   } catch (error) {
     console.error('Exercise agent error:', error);
     res.status(500).json({ 
       error: { 
-        message: 'Failed to generate exercise program', 
+        message: 'Failed to start exercise generation', 
         details: error.message 
       } 
     });
