@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth.middleware');
+const { protect: auth } = require('../middleware/auth.middleware');
 
 // Import reference data libraries with proper destructuring
 const { romReference, getJoints, getMovements } = require('../data/rom-reference');
