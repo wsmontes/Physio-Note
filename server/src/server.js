@@ -86,11 +86,13 @@ app.use((req, res) => {
   res.status(404).json({ error: { message: 'Route not found', status: 404 } });
 });
 
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📍 API URL: http://localhost:${PORT}/api`);
-});
+// Start server (only if not in test mode)
+if (process.env.NODE_ENV !== 'test') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📍 API URL: http://localhost:${PORT}/api`);
+  });
+}
 
 module.exports = app;

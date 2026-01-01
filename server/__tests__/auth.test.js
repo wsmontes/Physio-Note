@@ -1,7 +1,7 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
-const app = require('../../src/server'); // We'll need to export app from server.js
-const User = require('../../src/models/user.model');
+const app = require('../src/server');
+const User = require('../src/models/user.model');
 
 describe('Authentication API', () => {
   beforeAll(async () => {
@@ -26,7 +26,8 @@ describe('Authentication API', () => {
   describe('POST /api/auth/register', () => {
     it('should register a new user successfully', async () => {
       const userData = {
-        name: 'Test Therapist',
+        firstName: 'Test',
+        lastName: 'Therapist',
         email: 'test@example.com',
         password: 'Password123!',
         licenseNumber: 'PT12345'
@@ -38,14 +39,16 @@ describe('Authentication API', () => {
         .expect(201);
 
       expect(response.body).toHaveProperty('token');
-      expect(response.body.user).toHaveProperty('email', userData.email);
-      expect(response.body.user).toHaveProperty('name', userData.name);
-      expect(response.body.user).not.toHaveProperty('password');
+      expect(response.body).toHaveProperty('email', userData.email);
+      expect(response.body).toHaveProperty('firstName', userData.firstName);
+      expect(response.body).toHaveProperty('lastName', userData.lastName);
+      expect(response.body).not.toHaveProperty('password');
     });
 
     it('should not register user with existing email', async () => {
       const userData = {
-        name: 'Test Therapist',
+        firstName: 'Test',
+        lastName: 'Therapist',
         email: 'test@example.com',
         password: 'Password123!',
         licenseNumber: 'PT12345'
@@ -62,7 +65,7 @@ describe('Authentication API', () => {
         .send(userData)
         .expect(400);
 
-      expect(response.body).toHaveProperty('message');
+      expect(response.body.error).toHaveProperty('message');
     });
 
     it('should validate required fields', async () => {
@@ -70,11 +73,13 @@ describe('Authentication API', () => {
         .post('/api/auth/register')
         .send({
           email: 'test@example.com'
-          // Missing name and password
+          // Missing firstName, lastName and password
         })
         .expect(400);
 
-      expect(response.body).toHaveProperty('message');
+      expect(response.body).toHaveProperty('errors');
+      expect(Array.isArray(response.body.errors)).toBe(true);
+      expect(response.body.errors.length).toBeGreaterThan(0);
     });
   });
 
@@ -84,7 +89,8 @@ describe('Authentication API', () => {
       await request(app)
         .post('/api/auth/register')
         .send({
-          name: 'Test Therapist',
+          firstName: 'Test',
+          lastName: 'Therapist',
           email: 'test@example.com',
           password: 'Password123!',
           licenseNumber: 'PT12345'
@@ -101,7 +107,9 @@ describe('Authentication API', () => {
         .expect(200);
 
       expect(response.body).toHaveProperty('token');
-      expect(response.body.user).toHaveProperty('email', 'test@example.com');
+      expect(response.body).toHaveProperty('email', 'test@example.com');
+      expect(response.body).toHaveProperty('firstName', 'Test');
+      expect(response.body).toHaveProperty('lastName', 'Therapist');
     });
 
     it('should not login with incorrect password', async () => {
@@ -113,7 +121,7 @@ describe('Authentication API', () => {
         })
         .expect(401);
 
-      expect(response.body).toHaveProperty('message');
+      expect(response.body.error).toHaveProperty('message');
     });
 
     it('should not login with non-existent email', async () => {
@@ -125,7 +133,7 @@ describe('Authentication API', () => {
         })
         .expect(401);
 
-      expect(response.body).toHaveProperty('message');
+      expect(response.body.error).toHaveProperty('message');
     });
   });
 });

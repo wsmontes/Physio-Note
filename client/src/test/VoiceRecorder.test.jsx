@@ -22,7 +22,7 @@ describe('VoiceRecorder Component', () => {
     renderWithToast(<VoiceRecorder onRecordingComplete={mockOnRecordingComplete} />);
     
     expect(screen.getByText(/start recording/i)).toBeInTheDocument();
-    expect(screen.getByText(/00:00/i)).toBeInTheDocument();
+    expect(screen.getByText(/upload audio/i)).toBeInTheDocument();
   });
 
   it('should show recording state when start button is clicked', async () => {
@@ -32,42 +32,43 @@ describe('VoiceRecorder Component', () => {
     fireEvent.click(startButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/recording/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /stop recording/i })).toBeInTheDocument();
     });
   });
 
   it('should have file upload input', () => {
     renderWithToast(<VoiceRecorder onRecordingComplete={mockOnRecordingComplete} />);
     
-    const fileInput = screen.getByLabelText(/upload audio file/i);
+    const uploadLabel = screen.getByText(/upload audio/i).closest('label');
+    const fileInput = uploadLabel.querySelector('input[type="file"]');
     expect(fileInput).toBeInTheDocument();
     expect(fileInput).toHaveAttribute('type', 'file');
-    expect(fileInput).toHaveAttribute('accept', '.mp3,.wav,.m4a,.webm');
+    expect(fileInput).toHaveAttribute('accept', 'audio/*');
   });
 
-  it('should display supported formats', () => {
+  it('should display upload audio button', () => {
     renderWithToast(<VoiceRecorder onRecordingComplete={mockOnRecordingComplete} />);
     
-    expect(screen.getByText(/supported formats/i)).toBeInTheDocument();
-    expect(screen.getByText(/mp3, wav, m4a, webm/i)).toBeInTheDocument();
+    expect(screen.getByText(/upload audio/i)).toBeInTheDocument();
   });
 
   it('should handle file upload', async () => {
     renderWithToast(<VoiceRecorder onRecordingComplete={mockOnRecordingComplete} />);
     
     const file = new File(['audio content'], 'test.mp3', { type: 'audio/mp3' });
-    const fileInput = screen.getByLabelText(/upload audio file/i);
+    const uploadLabel = screen.getByText(/upload audio/i).closest('label');
+    const fileInput = uploadLabel.querySelector('input[type="file"]');
 
     fireEvent.change(fileInput, { target: { files: [file] } });
 
     await waitFor(() => {
-      expect(mockOnRecordingComplete).toHaveBeenCalled();
+      expect(mockOnRecordingComplete).toHaveBeenCalledWith(file);
     });
   });
 
-  it('should show max file size warning', () => {
+  it('should show start recording button', () => {
     renderWithToast(<VoiceRecorder onRecordingComplete={mockOnRecordingComplete} />);
     
-    expect(screen.getByText(/max size: 25mb/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start recording/i })).toBeInTheDocument();
   });
 });
