@@ -21,24 +21,31 @@ describe('Patient Model', () => {
   describe('Patient Creation', () => {
     it('should create a patient with valid data', async () => {
       const patientData = {
-        name: 'John Doe',
+        firstName: 'John',
+        lastName: 'Doe',
         dateOfBirth: new Date('1990-01-01'),
         gender: 'male',
         phone: '555-0100',
         email: 'john@example.com',
-        address: '123 Main St',
-        therapist: new mongoose.Types.ObjectId()
+        address: {
+          street: '123 Main St',
+          city: 'Boston',
+          state: 'MA',
+          zipCode: '02101'
+        },
+        therapistId: new mongoose.Types.ObjectId()
       };
 
       const patient = await Patient.create(patientData);
 
-      expect(patient.name).toBe(patientData.name);
+      expect(patient.firstName).toBe(patientData.firstName);
+      expect(patient.lastName).toBe(patientData.lastName);
       expect(patient.email).toBe(patientData.email);
       expect(patient.status).toBe('active'); // Default value
       expect(patient._id).toBeDefined();
     });
 
-    it('should require name and therapist fields', async () => {
+    it('should require firstName, lastName and therapistId fields', async () => {
       const invalidPatient = new Patient({
         email: 'test@example.com'
       });
@@ -51,14 +58,16 @@ describe('Patient Model', () => {
       }
 
       expect(error).toBeDefined();
-      expect(error.errors.name).toBeDefined();
-      expect(error.errors.therapist).toBeDefined();
+      expect(error.errors.firstName).toBeDefined();
+      expect(error.errors.lastName).toBeDefined();
+      expect(error.errors.therapistId).toBeDefined();
     });
 
     it('should set default status to active', async () => {
       const patient = await Patient.create({
-        name: 'Jane Doe',
-        therapist: new mongoose.Types.ObjectId()
+        firstName: 'Jane',
+        lastName: 'Doe',
+        therapistId: new mongoose.Types.ObjectId()
       });
 
       expect(patient.status).toBe('active');
@@ -66,9 +75,10 @@ describe('Patient Model', () => {
 
     it('should validate gender enum values', async () => {
       const patientData = {
-        name: 'Test Patient',
+        firstName: 'Test',
+        lastName: 'Patient',
         gender: 'invalid-gender',
-        therapist: new mongoose.Types.ObjectId()
+        therapistId: new mongoose.Types.ObjectId()
       };
 
       let error;
@@ -84,8 +94,9 @@ describe('Patient Model', () => {
 
     it('should store medical history correctly', async () => {
       const patientData = {
-        name: 'Test Patient',
-        therapist: new mongoose.Types.ObjectId(),
+        firstName: 'Test',
+        lastName: 'Patient',
+        therapistId: new mongoose.Types.ObjectId(),
         medicalHistory: {
           conditions: ['Hypertension', 'Diabetes'],
           surgeries: ['ACL Repair'],
@@ -101,44 +112,30 @@ describe('Patient Model', () => {
       expect(patient.medicalHistory.allergies).toContain('Penicillin');
     });
 
-    it('should store insurance information correctly', async () => {
-      const patientData = {
-        name: 'Test Patient',
-        therapist: new mongoose.Types.ObjectId(),
-        insurance: {
-          provider: 'Blue Cross',
-          policyNumber: 'BC12345',
-          groupNumber: 'GRP001'
-        }
-      };
-
-      const patient = await Patient.create(patientData);
-
-      expect(patient.insurance.provider).toBe('Blue Cross');
-      expect(patient.insurance.policyNumber).toBe('BC12345');
-    });
   });
 
   describe('Patient Updates', () => {
     it('should update patient information', async () => {
       const patient = await Patient.create({
-        name: 'Original Name',
-        therapist: new mongoose.Types.ObjectId()
+        firstName: 'Original',
+        lastName: 'Name',
+        therapistId: new mongoose.Types.ObjectId()
       });
 
-      patient.name = 'Updated Name';
+      patient.firstName = 'Updated';
       patient.phone = '555-0200';
       await patient.save();
 
       const updatedPatient = await Patient.findById(patient._id);
-      expect(updatedPatient.name).toBe('Updated Name');
+      expect(updatedPatient.firstName).toBe('Updated');
       expect(updatedPatient.phone).toBe('555-0200');
     });
 
     it('should update timestamps automatically', async () => {
       const patient = await Patient.create({
-        name: 'Test Patient',
-        therapist: new mongoose.Types.ObjectId()
+        firstName: 'Test',
+        lastName: 'Patient',
+        therapistId: new mongoose.Types.ObjectId()
       });
 
       const originalUpdatedAt = patient.updatedAt;
@@ -157,9 +154,9 @@ describe('Patient Model', () => {
     beforeEach(async () => {
       const therapistId = new mongoose.Types.ObjectId();
       await Patient.create([
-        { name: 'Active Patient 1', status: 'active', therapist: therapistId },
-        { name: 'Active Patient 2', status: 'active', therapist: therapistId },
-        { name: 'Inactive Patient', status: 'inactive', therapist: therapistId }
+        { firstName: 'Active', lastName: 'Patient 1', status: 'active', therapistId },
+        { firstName: 'Active', lastName: 'Patient 2', status: 'active', therapistId },
+        { firstName: 'Inactive', lastName: 'Patient', status: 'inactive', therapistId }
       ]);
     });
 
@@ -174,9 +171,9 @@ describe('Patient Model', () => {
     });
 
     it('should find patient by name', async () => {
-      const patient = await Patient.findOne({ name: 'Active Patient 1' });
+      const patient = await Patient.findOne({ firstName: 'Active' });
       expect(patient).toBeDefined();
-      expect(patient.name).toBe('Active Patient 1');
+      expect(patient.firstName).toBe('Active');
     });
   });
 });

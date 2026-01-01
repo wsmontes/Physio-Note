@@ -1,8 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import aiService from '../../services/ai.service';
-import axios from 'axios';
+import * as aiService from '../../services/ai.service';
 
-vi.mock('axios');
+// Mock axios config
+vi.mock('../../services/axios.config', () => ({
+  default: {
+    post: vi.fn(),
+    get: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn()
+  }
+}));
 
 describe('AI Service', () => {
   beforeEach(() => {
@@ -19,14 +26,14 @@ describe('AI Service', () => {
         }
       };
 
-      axios.post.mockResolvedValue(mockResponse);
+      axiosInstance.post.mockResolvedValue(mockResponse);
 
       const audioBlob = new Blob(['audio'], { type: 'audio/mp3' });
       const duration = 120;
 
       const result = await aiService.transcribeAudio(audioBlob, duration);
 
-      expect(axios.post).toHaveBeenCalledWith(
+      expect(axiosInstance.post).toHaveBeenCalledWith(
         '/api/ai/transcribe',
         expect.any(FormData),
         expect.objectContaining({
@@ -41,7 +48,7 @@ describe('AI Service', () => {
     });
 
     it('should handle transcription errors', async () => {
-      axios.post.mockRejectedValue(new Error('Transcription failed'));
+      axiosInstance.post.mockRejectedValue(new Error('Transcription failed'));
 
       const audioBlob = new Blob(['audio'], { type: 'audio/mp3' });
 
@@ -63,7 +70,7 @@ describe('AI Service', () => {
         }
       };
 
-      axios.post.mockResolvedValue(mockResponse);
+      axiosInstance.post.mockResolvedValue(mockResponse);
 
       const transcription = 'Patient reports lower back pain';
       const context = { patientName: 'John Doe' };
@@ -71,7 +78,7 @@ describe('AI Service', () => {
 
       const result = await aiService.generateNote(transcription, context, template);
 
-      expect(axios.post).toHaveBeenCalledWith(
+      expect(axiosInstance.post).toHaveBeenCalledWith(
         '/api/ai/generate-note',
         {
           transcription,
@@ -106,7 +113,7 @@ describe('AI Service', () => {
         }
       };
 
-      axios.post.mockResolvedValue(mockResponse);
+      axiosInstance.post.mockResolvedValue(mockResponse);
 
       const context = {
         diagnosis: 'Lower back pain',
@@ -115,7 +122,7 @@ describe('AI Service', () => {
 
       const result = await aiService.generateExerciseProgram(context);
 
-      expect(axios.post).toHaveBeenCalledWith(
+      expect(axiosInstance.post).toHaveBeenCalledWith(
         '/api/ai/exercise-program',
         { context },
         expect.any(Object)
@@ -134,7 +141,7 @@ describe('AI Service', () => {
         }
       };
 
-      axios.post.mockResolvedValue(mockResponse);
+      axiosInstance.post.mockResolvedValue(mockResponse);
 
       const context = {
         treatments: ['Manual Therapy', 'Therapeutic Exercise'],
@@ -144,7 +151,7 @@ describe('AI Service', () => {
 
       const result = await aiService.suggestBillingCodes(context);
 
-      expect(axios.post).toHaveBeenCalledWith(
+      expect(axiosInstance.post).toHaveBeenCalledWith(
         '/api/ai/billing-codes',
         { context },
         expect.any(Object)
@@ -169,7 +176,7 @@ describe('AI Service', () => {
         }
       };
 
-      axios.post.mockResolvedValue(mockResponse);
+      axiosInstance.post.mockResolvedValue(mockResponse);
 
       const audioBlob = new Blob(['audio'], { type: 'audio/mp3' });
       const context = { patientName: 'John Doe' };

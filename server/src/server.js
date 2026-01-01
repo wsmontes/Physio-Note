@@ -7,6 +7,11 @@ require('dotenv').config();
 
 const app = express();
 
+// Export app for testing
+if (process.env.NODE_ENV === 'test') {
+  module.exports = app;
+}
+
 // Middleware
 app.use(helmet()); // Security headers
 

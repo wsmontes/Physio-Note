@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import VoiceRecorder from '../../components/VoiceRecorder';
+import VoiceRecorder from '../components/VoiceRecorder';
 
 describe('VoiceRecorder Component', () => {
   const mockOnRecordingComplete = vi.fn();
