@@ -21,8 +21,10 @@ const AIProgressModal = ({ isOpen, onClose, sessionId }) => {
     setError(null);
 
     // Connect to Server-Sent Events
+    // VITE_API_URL already includes /api, so we don't add it again
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
     const eventSource = new EventSource(
-      `${import.meta.env.VITE_API_URL}/api/ai/agent/progress/${sessionId}`,
+      `${apiUrl}/ai/agent/progress/${sessionId}`,
       { withCredentials: true }
     );
 
