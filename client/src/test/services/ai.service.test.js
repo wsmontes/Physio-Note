@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as aiService from '../../services/ai.service';
+import axiosInstance from '../../services/axios.config';
 
 // Mock axios config
 vi.mock('../../services/axios.config', () => ({
@@ -34,17 +35,17 @@ describe('AI Service', () => {
       const result = await aiService.transcribeAudio(audioBlob, duration);
 
       expect(axiosInstance.post).toHaveBeenCalledWith(
-        '/api/ai/transcribe',
+        'ai/transcribe',
         expect.any(FormData),
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Content-Type': 'multipart/form-data',
-            'Authorization': 'Bearer test-token'
-          })
+            'Content-Type': 'multipart/form-data'
+          }),
+          timeout: 45000
         })
       );
 
-      expect(result).toBe('Patient reports lower back pain for 3 days');
+      expect(result).toEqual({ transcription: 'Patient reports lower back pain for 3 days' });
     });
 
     it('should handle transcription errors', async () => {
@@ -79,16 +80,14 @@ describe('AI Service', () => {
       const result = await aiService.generateNote(transcription, context, template);
 
       expect(axiosInstance.post).toHaveBeenCalledWith(
-        '/api/ai/generate-note',
+        'ai/generate-note',
         {
           transcription,
           context,
           template
         },
         expect.objectContaining({
-          headers: expect.objectContaining({
-            'Authorization': 'Bearer test-token'
-          })
+          timeout: 60000
         })
       );
 
@@ -115,16 +114,17 @@ describe('AI Service', () => {
 
       axiosInstance.post.mockResolvedValue(mockResponse);
 
-      const context = {
+      const sessionData = {
         diagnosis: 'Lower back pain',
         currentExercises: []
       };
+      const patientGoals = 'Return to running';
 
-      const result = await aiService.generateExerciseProgram(context);
+      const result = await aiService.generateExerciseProgram(sessionData, patientGoals);
 
       expect(axiosInstance.post).toHaveBeenCalledWith(
-        '/api/ai/exercise-program',
-        { context },
+        'ai/exercise-program',
+        { sessionData, patientGoals },
         expect.any(Object)
       );
 
@@ -143,17 +143,17 @@ describe('AI Service', () => {
 
       axiosInstance.post.mockResolvedValue(mockResponse);
 
-      const context = {
+      const sessionData = {
         treatments: ['Manual Therapy', 'Therapeutic Exercise'],
         sessionType: 'follow-up',
         duration: 60
       };
 
-      const result = await aiService.suggestBillingCodes(context);
+      const result = await aiService.suggestBillingCodes(sessionData);
 
       expect(axiosInstance.post).toHaveBeenCalledWith(
-        '/api/ai/billing-codes',
-        { context },
+        'ai/billing-codes',
+        { sessionData },
         expect.any(Object)
       );
 
