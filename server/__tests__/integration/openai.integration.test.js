@@ -7,7 +7,17 @@
  * Run with: npm test -- --testPathPattern=integration/openai
  */
 
+const fs = require('fs');
+const path = require('path');
+
+// Load .env.test first
 require('dotenv').config({ path: '.env.test' });
+
+// If API key is placeholder or missing, load from .env
+if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY.includes('your-openai-api-key')) {
+  require('dotenv').config({ path: '.env', override: true });
+}
+
 const OpenAI = require('openai');
 
 describe('OpenAI Integration Tests', () => {
@@ -15,8 +25,8 @@ describe('OpenAI Integration Tests', () => {
   const MODEL = 'gpt-5-nano';
 
   beforeAll(() => {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY not configured in .env.test');
+    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY.includes('your-openai-api-key')) {
+      throw new Error('OPENAI_API_KEY not configured in .env or .env.test');
     }
     
     openai = new OpenAI({
