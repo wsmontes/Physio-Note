@@ -10,9 +10,9 @@ An AI-powered medical scribe application designed specifically for physiotherapi
 - ❌ Security rating: 2/5 (Development/Demo only)
 - ✅ Safe for: Testing, demos, portfolio, development with fake data
 
-**See [PRODUCTION_WARNING.md](PRODUCTION_WARNING.md) for legal implications and requirements.**
+**See [PRODUCTION_WARNING.md](docs/PRODUCTION_WARNING.md) for legal implications and requirements.**
 
-**For deployment:** See [RENDER_QUICKSTART.md](RENDER_QUICKSTART.md) (15-min guide) or [DEPLOYMENT.md](DEPLOYMENT.md) (comprehensive guide)
+**For deployment:** See [RENDER_QUICKSTART.md](docs/RENDER_QUICKSTART.md) (15-min guide) or [DEPLOYMENT.md](docs/DEPLOYMENT.md) (comprehensive guide)
 
 ---
 
